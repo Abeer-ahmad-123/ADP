@@ -62,7 +62,6 @@ export default function AdminGalleryUploadForm() {
           access: "public",
           contentType: file.type || "image/jpeg",
           handleUploadUrl: "/api/admin/content/blob-upload",
-          multipart: true,
           onUploadProgress: (event) => {
             setProgress(event.percentage);
           },

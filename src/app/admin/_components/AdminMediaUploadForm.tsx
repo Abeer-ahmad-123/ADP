@@ -80,7 +80,6 @@ export default function AdminMediaUploadForm() {
           access: "public",
           contentType: file.type || getFallbackContentType(kind),
           handleUploadUrl: "/api/admin/content/blob-upload",
-          multipart: true,
           onUploadProgress: (event) => {
             setStatusLabel("Uploading media");
             setProgress(event.percentage);

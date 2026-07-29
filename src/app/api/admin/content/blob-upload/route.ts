@@ -97,7 +97,6 @@ export async function POST(request: Request): Promise<NextResponse> {
           }),
         };
       },
-      onUploadCompleted: async () => {},
     });
 
     return NextResponse.json(jsonResponse);

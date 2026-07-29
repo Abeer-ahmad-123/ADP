@@ -63,7 +63,6 @@ export default function AdminBookUploadForm() {
           access: "public",
           contentType: file.type || "application/pdf",
           handleUploadUrl: "/api/admin/book/blob-upload",
-          multipart: true,
           onUploadProgress: (event) => {
             setStatusLabel("Uploading PDF");
             setProgress(event.percentage);
