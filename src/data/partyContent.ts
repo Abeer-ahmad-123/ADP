@@ -88,12 +88,12 @@ export const AGENDA_ITEMS: AgendaItem[] = [
     copy: "Clean water points, shaded streets, recycling pilots, and flood-readiness teams at union council level.",
     Icon: Sprout,
   },
-  {
-    title: "Transparent Funding",
-    area: "Trust",
-    copy: "Monthly public donation summaries, audited campaign spending, and conflict-of-interest disclosures.",
-    Icon: ShieldCheck,
-  },
+  // {
+  //   title: "Transparent Funding",
+  //   area: "Trust",
+  //   copy: "Monthly public donation summaries, audited campaign spending, and conflict-of-interest disclosures.",
+  //   Icon: ShieldCheck,
+  // },
 ];
 
 export const TIMELINE_ITEMS = [
@@ -138,7 +138,7 @@ export const FOOTER_NAV_GROUPS = [
       { label: "Agenda", href: "/#agenda" },
       { label: "Book", href: "/book" },
       { label: "Membership", href: "/#register" },
-      { label: "Funding", href: "/#funding" },
+      // { label: "Funding", href: "/#funding" },
     ],
   },
   {
@@ -155,14 +155,14 @@ export const FOOTER_NAV_GROUPS = [
 export const FOOTER_CONTACTS = [
   { label: "info@adp.example", href: "mailto:info@adp.example" },
   { label: "0343-9500000", href: "tel:+923439500000" },
-  { label: "Islamabad campaign secretariat", href: "/#funding" },
+  { label: "Islamabad campaign secretariat", href: "" },
 ];
 
 export const FOOTER_BANK_DETAILS = [
   { label: "Status", value: "Bank account will be added later" },
   { label: "Timeline", value: "After approval and audit setup" },
   { label: "Current note", value: "No online donations are collected here" },
-  { label: "Reference", value: "Official funding details will be published publicly" },
+  // { label: "Reference", value: "Official funding details will be published publicly" },
 ];
 
 export const FOOTER_ACTIONS = [

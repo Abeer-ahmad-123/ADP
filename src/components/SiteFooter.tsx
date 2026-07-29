@@ -33,7 +33,7 @@ export default function SiteFooter() {
             <strong>{PARTY_NAME}</strong>
           </Link>
           <p>
-            A modern public movement for measurable promises, clean funding,
+            A modern public movement for measurable promises,
             local leadership, and citizen-facing progress.
           </p>
 

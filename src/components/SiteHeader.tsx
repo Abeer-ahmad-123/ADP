@@ -22,7 +22,7 @@ const primaryNavLinks = [
   { href: "/#agenda", label: "Agenda" },
   { href: "/book", label: "Book" },
   { href: "/#register", label: "Register" },
-  { href: "/#funding", label: "Funding" },
+  // { href: "/#funding", label: "Funding" },
 ];
 
 const secondaryNavLinks = [
@@ -148,14 +148,14 @@ export default function SiteHeader() {
         >
           <UserRoundPlus aria-hidden="true" size={18} />
         </Link>
-        <Link
+        {/* <Link
           className="icon-button desktop-only"
           aria-label="Funding details"
           href="/#funding"
           onClick={closeMenus}
         >
           <CreditCard aria-hidden="true" size={18} />
-        </Link>
+        </Link> */}
       </div>
 
       <button
