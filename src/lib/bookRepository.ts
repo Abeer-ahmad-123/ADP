@@ -429,6 +429,49 @@ export async function deleteBook(id: number) {
   return (result.rowCount || 0) > 0;
 }
 
+export async function replaceBookPages(bookId: number, pages: BookSpread[]) {
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query("begin");
+    await client.query("delete from book_pages where book_id = $1", [bookId]);
+
+    for (const page of pages) {
+      await client.query(
+        `
+          insert into book_pages (
+            book_id,
+            page_number,
+            kicker,
+            title,
+            body,
+            image_src,
+            image_alt
+          )
+          values ($1, $2, $3, $4, $5, $6, $7)
+        `,
+        [
+          bookId,
+          page.pageNumber,
+          page.kicker,
+          page.title,
+          page.body,
+          page.imageSrc || null,
+          page.imageAlt || null,
+        ],
+      );
+    }
+
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function setBookDetails({
   author,
   bookId,

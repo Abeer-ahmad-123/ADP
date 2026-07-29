@@ -1,10 +1,21 @@
 import { getAdminSessionFromRequest } from "@/lib/adminAuth";
-import { createBook } from "@/lib/bookRepository";
+import {
+  createBook,
+  deleteBook,
+  replaceBookPages,
+} from "@/lib/bookRepository";
+import {
+  deleteGeneratedBookPageImages,
+  generateBookPagesFromPdf,
+} from "@/lib/bookPageGenerator";
 import {
   redirectAfterPost,
   redirectToPathAfterPost,
 } from "@/lib/redirects";
-import { saveBookPdfUpload } from "@/lib/uploadStore";
+import {
+  deletePublicUpload,
+  saveBookPdfUpload,
+} from "@/lib/uploadStore";
 
 export const runtime = "nodejs";
 
@@ -36,13 +47,41 @@ export async function POST(request: Request) {
       return redirectToAdmin(request, "book-invalid");
     }
 
-    const bookPdfHref = await saveBookPdfUpload(formData.get("file"));
-    await createBook({
-      author,
-      pdfHref: bookPdfHref,
-      subtitle,
-      title,
-    });
+    let bookPdfHref = "";
+    let createdBook: Awaited<ReturnType<typeof createBook>> = null;
+
+    try {
+      bookPdfHref = await saveBookPdfUpload(formData.get("file"));
+      createdBook = await createBook({
+        author,
+        pdfHref: bookPdfHref,
+        subtitle,
+        title,
+      });
+
+      if (!createdBook) {
+        throw new Error("Book could not be created.");
+      }
+
+      const pages = await generateBookPagesFromPdf({
+        bookId: createdBook.id,
+        pdfHref: bookPdfHref,
+        title,
+      });
+
+      await replaceBookPages(createdBook.id, pages);
+    } catch (error) {
+      if (createdBook) {
+        await deleteBook(createdBook.id);
+        await deleteGeneratedBookPageImages(createdBook.id);
+      }
+
+      if (bookPdfHref) {
+        await deletePublicUpload(bookPdfHref);
+      }
+
+      throw error;
+    }
 
     return redirectToAdmin(request, "book-created");
   } catch {
