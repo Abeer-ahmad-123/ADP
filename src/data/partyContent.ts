@@ -147,6 +147,7 @@ export const FOOTER_NAV_GROUPS = [
       { label: "Leadership", href: "/leadership" },
       { label: "Audio", href: "/media#audio" },
       { label: "Video Reels", href: "/media#video-reels" },
+      { label: "Photo Gallery", href: "/gallery" },
     ],
   },
 ];

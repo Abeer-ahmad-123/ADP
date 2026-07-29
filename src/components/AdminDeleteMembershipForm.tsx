@@ -1,6 +1,4 @@
-"use client";
-
-import { Trash2 } from "lucide-react";
+import AdminConfirmDeleteForm from "@/components/AdminConfirmDeleteForm";
 
 export default function AdminDeleteMembershipForm({
   fullName,
@@ -10,29 +8,16 @@ export default function AdminDeleteMembershipForm({
   membershipNumber: string;
 }) {
   return (
-    <form
+    <AdminConfirmDeleteForm
       action="/api/admin/memberships/manage"
-      method="post"
-      onSubmit={(event) => {
-        if (
-          !window.confirm(
-            `Delete membership record for "${fullName}"? This cannot be undone.`,
-          )
-        ) {
-          event.preventDefault();
-        }
-      }}
-    >
-      <input name="intent" type="hidden" value="delete" />
-      <input name="membershipNumber" type="hidden" value={membershipNumber} />
-      <button
-        aria-label={`Delete membership record for ${fullName}`}
-        className="danger-button"
-        title="Delete membership"
-        type="submit"
-      >
-        <Trash2 aria-hidden="true" size={16} />
-      </button>
-    </form>
+      ariaLabel={`Delete membership record for ${fullName}`}
+      hiddenFields={[
+        { name: "intent", value: "delete" },
+        { name: "membershipNumber", value: membershipNumber },
+      ]}
+      itemName={fullName}
+      itemType="membership record"
+      title="Delete membership"
+    />
   );
 }

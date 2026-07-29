@@ -79,6 +79,7 @@ create table if not exists content_entries (
       'leadership_profile',
       'audio',
       'video_reel',
+      'gallery_photo',
       'party_activity'
     )
   ),
@@ -93,6 +94,24 @@ create table if not exists content_entries (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table content_entries
+  drop constraint if exists content_entries_kind_check;
+
+alter table content_entries
+  add constraint content_entries_kind_check
+  check (
+    kind in (
+      'news',
+      'blog',
+      'announcement',
+      'leadership_profile',
+      'audio',
+      'video_reel',
+      'gallery_photo',
+      'party_activity'
+    )
+  );
 
 create index if not exists content_entries_kind_published_idx
   on content_entries (kind, is_published, published_at desc);

@@ -2,18 +2,12 @@
 
 import { type AnimationEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
-  Landmark,
-  LockKeyhole,
-  Mail,
   RotateCcw,
 } from "lucide-react";
 import type { BookSpread } from "@/types/party";
-
-const PUBLIC_PREVIEW_PAGE_LIMIT = 4;
 
 type TurnDirection = "next" | "previous" | null;
 
@@ -98,37 +92,6 @@ function renderTurningPage(page: BookSpread, className: string, bookTitle: strin
   return renderBookPage(page, `turning-paper ${className}`, bookTitle, true);
 }
 
-function renderLockedNotice(partyName: string, lockedPageCount: number) {
-  return (
-    <div className="book-locked-panel">
-      <div className="book-lock-mark">
-        <LockKeyhole aria-hidden="true" size={28} />
-      </div>
-      <p className="eyebrow">Preview complete</p>
-      <h3>Buy to unlock the complete book.</h3>
-      <p>
-        The first four pages are open for public preview. To unlock the full
-        book, pay at the official party bank account and share your payment
-        reference with the email address where you want to receive the book.
-      </p>
-      <div className="book-unlock-notes">
-        <span>
-          <Landmark aria-hidden="true" size={17} />
-          {partyName} bank details are listed in the funding section.
-        </span>
-        <span>
-          <Mail aria-hidden="true" size={17} />
-          The complete book will be emailed within 12 hours after confirmation.
-        </span>
-      </div>
-      <Link className="primary-button" href="/#funding">
-        View funding details
-      </Link>
-      <small>{lockedPageCount} pages are locked in this public preview.</small>
-    </div>
-  );
-}
-
 export default function BookReader({
   compact = false,
   pages,
@@ -139,30 +102,31 @@ export default function BookReader({
   const [turn, setTurn] = useState<BookTurn | null>(null);
   const isMobileBook = useMediaQuery("(max-width: 700px)");
   const pageStep = isMobileBook ? 1 : 2;
-  const visiblePages = useMemo(
-    () => pages.slice(0, PUBLIC_PREVIEW_PAGE_LIMIT),
-    [pages],
-  );
-  const hasLockedPages = pages.length > visiblePages.length;
-  const lockedPageCount = Math.max(pages.length - visiblePages.length, 0);
-  const hasPages = visiblePages.length > 0;
-  const lockedIndex = visiblePages.length;
-  const maxReadableStartIndex = Math.max(visiblePages.length - pageStep, 0);
-  const maxStartIndex = hasLockedPages ? lockedIndex : maxReadableStartIndex;
+  const hasPages = pages.length > 0;
+  const maxStartIndex = useMemo(() => {
+    if (pages.length <= 1) {
+      return 0;
+    }
+
+    if (isMobileBook) {
+      return pages.length - 1;
+    }
+
+    return pages.length % 2 === 0 ? pages.length - 2 : pages.length - 1;
+  }, [isMobileBook, pages.length]);
   const safePageIndex = Math.min(pageIndex, maxStartIndex);
-  const isLockedSpread = hasLockedPages && safePageIndex >= lockedIndex;
-  const readablePageIndex = Math.min(safePageIndex, maxReadableStartIndex);
+  const readablePageIndex = safePageIndex;
   const bookTitle = title || "Book Reader";
 
-  const leftPage = visiblePages[readablePageIndex];
-  const rightPage = visiblePages[readablePageIndex + 1] ?? leftPage;
-  const currentMobilePage = visiblePages[readablePageIndex];
+  const leftPage = pages[readablePageIndex];
+  const rightPage = pages[readablePageIndex + 1] ?? leftPage;
+  const currentMobilePage = pages[readablePageIndex];
   const targetMobilePage = turn
-    ? visiblePages[turn.targetIndex]
+    ? pages[turn.targetIndex]
     : currentMobilePage;
-  const targetLeftPage = turn ? visiblePages[turn.targetIndex] : leftPage;
+  const targetLeftPage = turn ? pages[turn.targetIndex] : leftPage;
   const targetRightPage = turn
-    ? visiblePages[turn.targetIndex + 1] ?? targetLeftPage
+    ? pages[turn.targetIndex + 1] ?? targetLeftPage
     : rightPage;
   const visibleLeftPage =
     turn?.direction === "previous" ? targetLeftPage : leftPage;
@@ -183,15 +147,11 @@ export default function BookReader({
     () =>
       !hasPages
         ? "No pages"
-        : isLockedSpread
-          ? "Locked pages"
-        :
-      isMobileBook
+        : isMobileBook
         ? `Page ${targetMobilePage.pageNumber}`
         : `Pages ${targetLeftPage.pageNumber}-${targetRightPage.pageNumber}`,
     [
       hasPages,
-      isLockedSpread,
       isMobileBook,
       targetLeftPage?.pageNumber,
       targetMobilePage?.pageNumber,
@@ -206,12 +166,6 @@ export default function BookReader({
 
     const targetIndex = Math.min(safePageIndex + pageStep, maxStartIndex);
 
-    if (hasLockedPages && targetIndex >= lockedIndex) {
-      setPageIndex(lockedIndex);
-      setTurn(null);
-      return;
-    }
-
     setTurn({
       direction: "next",
       targetIndex,
@@ -225,12 +179,6 @@ export default function BookReader({
 
     const targetIndex = Math.max(safePageIndex - pageStep, 0);
 
-    if (isLockedSpread) {
-      setPageIndex(targetIndex);
-      setTurn(null);
-      return;
-    }
-
     setTurn({
       direction: "previous",
       targetIndex,
@@ -239,12 +187,6 @@ export default function BookReader({
 
   function resetBook() {
     if (isTurning || isFirstSpread) {
-      return;
-    }
-
-    if (isLockedSpread) {
-      setPageIndex(0);
-      setTurn(null);
       return;
     }
 
@@ -279,14 +221,10 @@ export default function BookReader({
 
       {hasPages ? (
         <div
-          className={`book-stage ${isLockedSpread ? "is-locked-stage" : ""} ${isMobileBook ? "mobile-book-stage" : ""} ${turn?.direction === "next" ? "is-turning-next" : ""} ${
-            turn?.direction === "previous" ? "is-turning-previous" : ""
-          }`}
+          className={`book-stage ${isMobileBook ? "mobile-book-stage" : ""}`}
           aria-live="polite"
         >
-          {isLockedSpread ? (
-            renderLockedNotice(partyName, lockedPageCount)
-          ) : isMobileBook ? (
+          {isMobileBook ? (
             renderBookPage(
               turn ? targetMobilePage : currentMobilePage,
               "mobile-page",
@@ -300,54 +238,34 @@ export default function BookReader({
           )}
 
           {turn && (
-            <>
-              <div
-                aria-hidden="true"
-                className={`turning-sheet turning-${turn.direction}`}
-                onAnimationEnd={finishTurn}
-              >
-                <div className="turning-face page-front">
-                  {renderTurningPage(
-                    incomingTurningPage,
-                    isMobileBook
-                      ? "mobile-page"
-                      : turn.direction === "next"
-                        ? "right-page"
-                        : "left-page",
-                    bookTitle,
-                  )}
-                </div>
-                <div className="turning-face page-back">
-                  {renderTurningPage(
-                    incomingTurningPage,
-                    isMobileBook
-                      ? "mobile-page"
-                      : turn.direction === "next"
-                        ? "left-page"
-                        : "right-page",
-                    bookTitle,
-                  )}
-                </div>
-              </div>
-
-              <div
-                aria-hidden="true"
-                className={`readable-turn-sheet readable-${turn.direction}`}
-              >
-                {renderBookPage(
+            <div
+              aria-hidden="true"
+              className={`turning-sheet turning-${turn.direction}`}
+              onAnimationEnd={finishTurn}
+            >
+              <div className="turning-face page-front">
+                {renderTurningPage(
                   incomingTurningPage,
-                  `readable-turn-paper ${
-                    isMobileBook
-                      ? "mobile-page"
-                      : turn.direction === "next"
-                        ? "left-page"
-                        : "right-page"
-                  }`,
+                  isMobileBook
+                    ? "mobile-page"
+                    : turn.direction === "next"
+                      ? "right-page"
+                      : "left-page",
                   bookTitle,
-                  true,
                 )}
               </div>
-            </>
+              <div className="turning-face page-back">
+                {renderTurningPage(
+                  incomingTurningPage,
+                  isMobileBook
+                    ? "mobile-page"
+                    : turn.direction === "next"
+                      ? "left-page"
+                      : "right-page",
+                  bookTitle,
+                )}
+              </div>
+            </div>
           )}
         </div>
       ) : (

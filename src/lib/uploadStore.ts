@@ -108,6 +108,16 @@ export async function saveLeadershipImageUpload(file: FormDataEntryValue | null)
     return "";
   }
 
+  return saveImageUpload(file, "content/leadership");
+}
+
+export async function saveGalleryImageUpload(file: FormDataEntryValue | null) {
+  assertUploadFile(file);
+
+  return saveImageUpload(file, "content/gallery");
+}
+
+function saveImageUpload(file: File, directory: string) {
   assertFileRules({
     allowedExtensions: [".jpg", ".jpeg", ".png", ".webp", ".gif"],
     allowedMimePrefixes: ["image/"],
@@ -115,7 +125,7 @@ export async function saveLeadershipImageUpload(file: FormDataEntryValue | null)
     maxBytes: MAX_IMAGE_UPLOAD_BYTES,
   });
 
-  return savePublicUpload(file, "content/leadership");
+  return savePublicUpload(file, directory);
 }
 
 export async function deletePublicUpload(href: string) {

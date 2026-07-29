@@ -31,6 +31,7 @@ const secondaryNavLinks = [
   { href: "/announcements", label: "Announcements" },
   { href: "/leadership", label: "Leadership" },
   { href: "/media", label: "Media" },
+  { href: "/gallery", label: "Gallery" },
 ];
 
 export default function SiteHeader() {

@@ -17,7 +17,7 @@ const CONTENT_KINDS: ContentKind[] = [
 ];
 
 function redirectToAdmin(request: Request, status: string) {
-  const url = new URL("/admin", request.url);
+  const url = new URL("/admin/publish", request.url);
   url.searchParams.set("status", status);
 
   return redirectAfterPost(url);

@@ -16,7 +16,7 @@ import {
 export const runtime = "nodejs";
 
 function redirectToAdmin(request: Request, status: string) {
-  const url = new URL("/admin", request.url);
+  const url = new URL("/admin/manifesto", request.url);
   url.searchParams.set("status", status);
   url.hash = "manifesto";
 

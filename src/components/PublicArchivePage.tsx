@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import {
   Film,
+  Images,
   Mic2,
   Play,
   Volume2,
@@ -13,6 +14,7 @@ import VideoReelPlayer from "@/components/VideoReelPlayer";
 import { PARTY_LOGO_ALT, PARTY_LOGO_SRC } from "@/data/partyContent";
 import type {
   LeadershipProfile,
+  GalleryPhoto,
   MediaItem,
   PublicContentItem,
 } from "@/types/party";
@@ -26,6 +28,7 @@ type PublicArchivePageProps = {
     | "announcements"
     | "blogs"
     | "funding"
+    | "gallery"
     | "leadership"
     | "manifesto"
     | "media"
@@ -222,6 +225,38 @@ export function LeadershipArchive({
           <p>{profile.role}</p>
           <h2>{profile.name}</h2>
           <span>{profile.summary}</span>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+export function GalleryArchive({ photos }: { photos: GalleryPhoto[] }) {
+  if (photos.length === 0) {
+    return <EmptyArchiveState label="No gallery photos have been published yet." />;
+  }
+
+  return (
+    <div className="gallery-archive-grid">
+      {photos.map((photo, index) => (
+        <article className="gallery-photo-card" key={photo.id}>
+          <div className="gallery-photo-frame">
+            <Image
+              alt={photo.title}
+              fill
+              priority={index < 2}
+              sizes="(max-width: 760px) 92vw, (max-width: 1200px) 45vw, 360px"
+              src={photo.imageUrl}
+            />
+          </div>
+          <div className="gallery-photo-copy">
+            <p>
+              <Images aria-hidden="true" size={15} />
+              Gallery · {photo.publishedAt}
+            </p>
+            <h2>{photo.title}</h2>
+            <span>{photo.summary}</span>
+          </div>
         </article>
       ))}
     </div>

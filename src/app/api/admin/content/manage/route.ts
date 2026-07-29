@@ -10,6 +10,7 @@ import {
 } from "@/lib/redirects";
 import {
   deletePublicUpload,
+  saveGalleryImageUpload,
   saveLeadershipImageUpload,
   saveMediaUpload,
 } from "@/lib/uploadStore";
@@ -44,6 +45,10 @@ function readEntryId(formData: FormData) {
 
 function isMediaKind(kind: ContentKind): kind is "audio" | "video_reel" {
   return kind === "audio" || kind === "video_reel";
+}
+
+function isGalleryKind(kind: ContentKind): kind is "gallery_photo" {
+  return kind === "gallery_photo";
 }
 
 function isFilledFile(value: FormDataEntryValue | null): value is File {
@@ -119,6 +124,14 @@ async function updateEntry(request: Request, formData: FormData) {
         file: mediaFile,
         kind: existing.kind,
       });
+    }
+  }
+
+  if (isGalleryKind(existing.kind)) {
+    const galleryImage = formData.get("mediaFile");
+
+    if (isFilledFile(galleryImage)) {
+      mediaUrl = await saveGalleryImageUpload(galleryImage);
     }
   }
 

@@ -145,7 +145,7 @@ export default async function BookPage({ searchParams }: BookRouteProps) {
             </span>
           </div>
 
-          <div className="book-library-grid">
+          {/* <div className="book-library-grid">
             {books.map((item) => (
               <article
                 className={`book-library-card ${
@@ -169,7 +169,7 @@ export default async function BookPage({ searchParams }: BookRouteProps) {
                 <p>No books have been published yet.</p>
               </div>
             )}
-          </div>
+          </div> */}
 
           <BookReader pages={book.pages} partyName={PARTY_NAME} title={bookTitle} />
         </div>

@@ -1,27 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   ExternalLink,
   Film,
   Headphones,
-  LogOut,
 } from "lucide-react";
-import { PARTY_NAME } from "@/data/partyContent";
-import { getAdminSessionFromCookies } from "@/lib/adminAuth";
+import AdminChrome from "@/app/admin/_components/AdminChrome";
+import AdminMediaUploadForm from "@/app/admin/_components/AdminMediaUploadForm";
 import { listContentEntries } from "@/lib/contentRepository";
+import {
+  getAdminLoadError,
+  getAdminStatusMessage,
+  requireAdminSession,
+  type AdminSearchParams,
+} from "@/lib/adminPage";
 import type { ContentEntry } from "@/types/party";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  robots: {
-    follow: false,
-    index: false,
-    nocache: true,
-  },
-  title: "Uploaded Media | Admin",
+  title: "Media",
 };
 
 async function loadMediaData() {
@@ -47,14 +45,9 @@ async function loadMediaData() {
       videoReels,
     };
   } catch (error) {
-    const isMissingDatabase =
-      error instanceof Error && error.message.includes("DATABASE_URL");
-
     return {
       ...result,
-      error: isMissingDatabase
-        ? "DATABASE_URL is not configured yet. Set it in .env.local and run database/schema.sql."
-        : "Uploaded media could not be loaded.",
+      error: getAdminLoadError(error, "Uploaded media could not be loaded."),
     };
   }
 }
@@ -166,38 +159,24 @@ function AdminMediaSection({
   );
 }
 
-export default async function AdminMediaPage() {
-  const session = await getAdminSessionFromCookies();
-
-  if (!session) {
-    redirect("/admin/login");
-  }
-
+export default async function AdminMediaPage({
+  searchParams,
+}: {
+  searchParams: AdminSearchParams;
+}) {
+  const session = await requireAdminSession();
+  const params = await searchParams;
   const media = await loadMediaData();
 
   return (
-    <main className="admin-route">
-      <header className="admin-topbar">
-        <div>
-          <Link className="admin-back-link" href="/admin">
-            <ArrowLeft aria-hidden="true" size={16} />
-            Dashboard
-          </Link>
-          <p className="eyebrow">Protected admin</p>
-          <h1>{PARTY_NAME} media</h1>
-          <span>
-            Review uploaded audio and video reels before or after publishing.
-          </span>
-        </div>
-        <form action="/api/admin/logout" method="post">
-          <button className="secondary-button dark-button" type="submit">
-            <LogOut aria-hidden="true" size={17} />
-            Logout
-          </button>
-        </form>
-      </header>
-
-      {media.error && <p className="admin-alert is-error">{media.error}</p>}
+    <AdminChrome
+      description="Upload and review audio messages and video reels."
+      error={media.error}
+      session={session}
+      statusMessage={getAdminStatusMessage(params.status)}
+      title="Media"
+    >
+      <AdminMediaUploadForm />
 
       <section className="admin-panel admin-action-panel">
         <div>
@@ -239,6 +218,6 @@ export default async function AdminMediaPage() {
         summary="Playable uploaded audio messages, ordered newest first."
         title="Uploaded audio messages"
       />
-    </main>
+    </AdminChrome>
   );
 }

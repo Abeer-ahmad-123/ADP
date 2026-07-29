@@ -3,6 +3,7 @@ import { getPool } from "@/lib/postgres";
 import type {
   ContentEntry,
   ContentKind,
+  GalleryPhoto,
   MediaItem,
 } from "@/types/party";
 
@@ -25,6 +26,7 @@ const KIND_LABELS: Record<ContentKind, string> = {
   announcement: "Announcement",
   audio: "Audio",
   blog: "Blog",
+  gallery_photo: "Gallery Photo",
   leadership_profile: "Leadership",
   news: "News",
   party_activity: "Activity",
@@ -35,6 +37,7 @@ const KIND_HREFS: Record<ContentKind, string> = {
   announcement: "/announcements",
   audio: "/media#audio",
   blog: "/blogs",
+  gallery_photo: "/gallery",
   leadership_profile: "/leadership",
   news: "/news",
   party_activity: "/",
@@ -344,6 +347,24 @@ export async function getPublicMediaItems() {
       thumbnailUrl: entry.thumbnailUrl,
       title: entry.title,
     })) satisfies MediaItem[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getPublicGalleryPhotos() {
+  try {
+    const entries = await listPublishedContentEntries("gallery_photo");
+
+    return entries
+      .filter((entry) => entry.mediaUrl)
+      .map((entry) => ({
+        id: entry.id,
+        imageUrl: entry.mediaUrl,
+        publishedAt: entry.publishedAt,
+        summary: entry.summary,
+        title: entry.title,
+      })) satisfies GalleryPhoto[];
   } catch {
     return [];
   }

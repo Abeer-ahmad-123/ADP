@@ -86,6 +86,7 @@ export type ContentKind =
   | "leadership_profile"
   | "audio"
   | "video_reel"
+  | "gallery_photo"
   | "party_activity";
 
 export type ContentEntry = {
@@ -134,4 +135,12 @@ export type MediaItem = {
   mediaUrl?: string;
   speaker?: string;
   thumbnailUrl?: string;
+};
+
+export type GalleryPhoto = {
+  id: number;
+  imageUrl: string;
+  publishedAt: string;
+  summary: string;
+  title: string;
 };

@@ -17,7 +17,7 @@ function redirectToAdmin(
   status: string,
   membershipNumber?: string,
 ) {
-  const url = new URL("/admin", request.url);
+  const url = new URL("/admin/memberships", request.url);
   url.searchParams.set("status", status);
 
   if (membershipNumber) {

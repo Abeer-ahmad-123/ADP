@@ -87,6 +87,15 @@ export const PUBLIC_SEO_ROUTES = [
     title: "Media",
   },
   {
+    changeFrequency: "weekly",
+    description:
+      "Photo gallery from Awam Dost Party public meetings, district organizing work, events, and party activities.",
+    label: "Gallery",
+    path: "/gallery",
+    priority: 0.73,
+    title: "Gallery",
+  },
+  {
     changeFrequency: "monthly",
     description:
       "Read the Awam Dost Party public book and manifesto material through the online page-turning reader.",

@@ -1,33 +1,33 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
-  ArrowLeft,
   Edit3,
   ExternalLink,
   FileText,
-  LogOut,
 } from "lucide-react";
+import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminDeleteContentForm from "@/components/AdminDeleteContentForm";
-import { getAdminSessionFromCookies } from "@/lib/adminAuth";
 import { listContentEntries } from "@/lib/contentRepository";
+import {
+  getAdminLoadError,
+  getAdminStatusMessage,
+  requireAdminSession,
+  type AdminSearchParams,
+} from "@/lib/adminPage";
 import type { ContentEntry, ContentKind } from "@/types/party";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  robots: {
-    follow: false,
-    index: false,
-    nocache: true,
-  },
-  title: "Manage Content | Admin",
+  title: "Manage Content",
 };
 
 const CONTENT_KIND_LABELS: Record<ContentKind, string> = {
   announcement: "Announcement",
   audio: "Audio",
   blog: "Blog",
+  gallery_photo: "Gallery Photo",
   leadership_profile: "Leadership Profile",
   news: "News",
   party_activity: "Activity",
@@ -38,18 +38,11 @@ const PUBLIC_KIND_HREFS: Record<ContentKind, string> = {
   announcement: "/announcements",
   audio: "/media#audio",
   blog: "/blogs",
+  gallery_photo: "/gallery",
   leadership_profile: "/leadership",
   news: "/news",
   party_activity: "/",
   video_reel: "/media#video-reels",
-};
-
-const STATUS_MESSAGES: Record<string, string> = {
-  "content-deleted": "Content entry deleted successfully.",
-  "content-manage-error": "Content entry could not be updated right now.",
-  "content-manage-invalid": "Please complete the required fields before saving.",
-  "content-manage-missing": "That content entry could not be found.",
-  "content-updated": "Content entry updated successfully.",
 };
 
 async function loadContentData() {
@@ -67,14 +60,9 @@ async function loadContentData() {
       entries: await listContentEntries(),
     };
   } catch (error) {
-    const isMissingDatabase =
-      error instanceof Error && error.message.includes("DATABASE_URL");
-
     return {
       ...result,
-      error: isMissingDatabase
-        ? "DATABASE_URL is not configured yet. Set it in .env.local and run database/schema.sql."
-        : "Content entries could not be loaded.",
+      error: getAdminLoadError(error, "Content entries could not be loaded."),
     };
   }
 }
@@ -92,12 +80,25 @@ function getMediaAccept(kind: ContentKind) {
     return "video/mp4,video/webm,video/quicktime";
   }
 
+  if (kind === "gallery_photo") {
+    return "image/png,image/jpeg,image/webp,image/gif";
+  }
+
   return undefined;
+}
+
+function getUploadLabel(kind: ContentKind) {
+  if (kind === "gallery_photo") {
+    return "Replace gallery image";
+  }
+
+  return "Replace uploaded file";
 }
 
 function getContentCounts(entries: ContentEntry[]) {
   return {
     announcements: entries.filter((entry) => entry.kind === "announcement").length,
+    gallery: entries.filter((entry) => entry.kind === "gallery_photo").length,
     media: entries.filter(isMediaEntry).length,
     published: entries.filter((entry) => entry.isPublished).length,
     written: entries.filter(
@@ -181,6 +182,15 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
             <audio controls preload="metadata" src={entry.mediaUrl}>
               <a href={entry.mediaUrl}>Open audio file</a>
             </audio>
+          ) : entry.kind === "gallery_photo" ? (
+            <Image
+              alt={entry.title}
+              className="admin-content-image-preview"
+              height={620}
+              sizes="(max-width: 920px) 90vw, 980px"
+              src={entry.mediaUrl}
+              width={980}
+            />
           ) : (
             <video
               controls
@@ -251,7 +261,7 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
 
               {mediaAccept && (
                 <label className="wide-field">
-                  <span>Replace uploaded file</span>
+                  <span>{getUploadLabel(entry.kind)}</span>
                   <input name="mediaFile" type="file" accept={mediaAccept} />
                 </label>
               )}
@@ -292,45 +302,21 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
 export default async function AdminContentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: AdminSearchParams;
 }) {
-  const session = await getAdminSessionFromCookies();
-
-  if (!session) {
-    redirect("/admin/login");
-  }
-
+  const session = await requireAdminSession();
   const params = await searchParams;
-  const statusMessage = params.status ? STATUS_MESSAGES[params.status] : "";
   const content = await loadContentData();
   const counts = getContentCounts(content.entries);
 
   return (
-    <main className="admin-route">
-      <header className="admin-topbar">
-        <div>
-          <Link className="admin-back-link" href="/admin">
-            <ArrowLeft aria-hidden="true" size={16} />
-            Dashboard
-          </Link>
-          <p className="eyebrow">Protected admin</p>
-          <h1>Manage content</h1>
-          <span>
-            Edit or delete saved news, blogs, announcements, leadership
-            profiles, audio, and video reels.
-          </span>
-        </div>
-        <form action="/api/admin/logout" method="post">
-          <button className="secondary-button dark-button" type="submit">
-            <LogOut aria-hidden="true" size={17} />
-            Logout
-          </button>
-        </form>
-      </header>
-
-      {content.error && <p className="admin-alert is-error">{content.error}</p>}
-      {statusMessage && <p className="admin-alert is-success">{statusMessage}</p>}
-
+    <AdminChrome
+      description="Edit or delete saved news, blogs, announcements, leadership profiles, gallery photos, audio, and video reels."
+      error={content.error}
+      session={session}
+      statusMessage={getAdminStatusMessage(params.status)}
+      title="Manage content"
+    >
       <section className="admin-stat-grid">
         <article>
           <span>Published</span>
@@ -351,6 +337,11 @@ export default async function AdminContentPage({
           <span>Media</span>
           <strong>{counts.media}</strong>
           <p>Audio messages and video reels stored online.</p>
+        </article>
+        <article>
+          <span>Gallery</span>
+          <strong>{counts.gallery}</strong>
+          <p>Public photo gallery images stored online.</p>
         </article>
       </section>
 
@@ -381,6 +372,6 @@ export default async function AdminContentPage({
           <p className="admin-empty-state">No content entries are stored yet.</p>
         )}
       </section>
-    </main>
+    </AdminChrome>
   );
 }

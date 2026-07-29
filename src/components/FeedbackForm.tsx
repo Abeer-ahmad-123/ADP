@@ -93,16 +93,21 @@ export default function FeedbackForm() {
   return (
     <div className="section-inner feedback-panel">
       <div className="feedback-copy">
-        <p className="eyebrow">Public feedback</p>
-        <h2>Send a complaint or suggestion.</h2>
+        <p className="eyebrow">Public help desk</p>
+        <h2>Complaints and suggestions</h2>
         <p>
-          Share an issue, idea, or local concern with Awam Dost Party. Messages
-          are stored securely for the admin team to review.
+          Share a district issue, civic concern, or practical idea with Awam
+          Dost Party. Every message is kept in the official admin record.
         </p>
         <span>
           <ShieldCheck aria-hidden="true" size={17} />
-          Reviewed from the protected admin dashboard
+          Reviewed by authorized party admins
         </span>
+        <div className="feedback-route-list" aria-label="Feedback categories">
+          <small>Complaint</small>
+          <small>Suggestion</small>
+          <small>District issue</small>
+        </div>
       </div>
 
       <form className="feedback-form" onSubmit={handleSubmit}>

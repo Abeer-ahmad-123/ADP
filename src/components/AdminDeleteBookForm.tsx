@@ -1,6 +1,4 @@
-"use client";
-
-import { Trash2 } from "lucide-react";
+import AdminConfirmDeleteForm from "@/components/AdminConfirmDeleteForm";
 
 export default function AdminDeleteBookForm({
   id,
@@ -10,25 +8,16 @@ export default function AdminDeleteBookForm({
   title: string;
 }) {
   return (
-    <form
+    <AdminConfirmDeleteForm
       action="/api/admin/book/manage"
-      method="post"
-      onSubmit={(event) => {
-        if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) {
-          event.preventDefault();
-        }
-      }}
-    >
-      <input name="intent" type="hidden" value="delete" />
-      <input name="id" type="hidden" value={id} />
-      <button
-        aria-label={`Delete ${title}`}
-        className="danger-button"
-        title="Delete book"
-        type="submit"
-      >
-        <Trash2 aria-hidden="true" size={16} />
-      </button>
-    </form>
+      ariaLabel={`Delete ${title}`}
+      hiddenFields={[
+        { name: "intent", value: "delete" },
+        { name: "id", value: id },
+      ]}
+      itemName={title}
+      itemType="book"
+      title="Delete book"
+    />
   );
 }

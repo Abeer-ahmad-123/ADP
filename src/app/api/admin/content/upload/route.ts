@@ -4,12 +4,25 @@ import {
   redirectAfterPost,
   redirectToPathAfterPost,
 } from "@/lib/redirects";
-import { saveMediaUpload } from "@/lib/uploadStore";
+import {
+  deletePublicUpload,
+  saveGalleryImageUpload,
+  saveMediaUpload,
+} from "@/lib/uploadStore";
+import type { ContentKind } from "@/types/party";
 
 export const runtime = "nodejs";
 
-function redirectToAdmin(request: Request, status: string) {
-  const url = new URL("/admin", request.url);
+type UploadContentKind = Extract<
+  ContentKind,
+  "audio" | "gallery_photo" | "video_reel"
+>;
+
+function redirectToUploadSection(request: Request, status: string, kind: string) {
+  const url = new URL(
+    kind === "gallery_photo" ? "/admin/gallery" : "/admin/media",
+    request.url,
+  );
   url.searchParams.set("status", status);
 
   return redirectAfterPost(url);
@@ -17,6 +30,10 @@ function redirectToAdmin(request: Request, status: string) {
 
 function readText(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
+}
+
+function isUploadContentKind(value: string): value is UploadContentKind {
+  return value === "audio" || value === "video_reel" || value === "gallery_photo";
 }
 
 export async function POST(request: Request) {
@@ -31,15 +48,20 @@ export async function POST(request: Request) {
   const title = readText(formData, "title");
   const summary = readText(formData, "summary");
 
-  if ((kind !== "audio" && kind !== "video_reel") || title.length < 2) {
-    return redirectToAdmin(request, "upload-invalid");
+  if (!isUploadContentKind(kind) || title.length < 2) {
+    return redirectToUploadSection(request, "upload-invalid", kind);
   }
 
+  let mediaUrl = "";
+
   try {
-    const mediaUrl = await saveMediaUpload({
-      file: formData.get("file"),
-      kind,
-    });
+    mediaUrl =
+      kind === "gallery_photo"
+        ? await saveGalleryImageUpload(formData.get("file"))
+        : await saveMediaUpload({
+            file: formData.get("file"),
+            kind,
+          });
 
     await createContentEntry({
       body: "",
@@ -47,13 +69,23 @@ export async function POST(request: Request) {
       kind,
       mediaUrl,
       personRole: "",
-      summary: summary || "Uploaded public media file.",
+      summary:
+        summary ||
+        (kind === "gallery_photo"
+          ? "Public gallery photo."
+          : "Uploaded public media file."),
       thumbnailUrl: "",
       title,
     });
 
-    return redirectToAdmin(request, "upload-created");
-  } catch {
-    return redirectToAdmin(request, "upload-error");
+    return redirectToUploadSection(request, "upload-created", kind);
+  } catch (error) {
+    if (mediaUrl) {
+      await deletePublicUpload(mediaUrl);
+    }
+
+    console.error("Admin content upload failed.", error);
+
+    return redirectToUploadSection(request, "upload-error", kind);
   }
 }
