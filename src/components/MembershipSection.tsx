@@ -1,28 +1,38 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useMemo, useState } from "react";
 import { BadgeCheck, Download, Printer } from "lucide-react";
 import {
-  MEMBER_WINGS,
+  PARTY_LOGO_ALT,
+  PARTY_LOGO_SRC,
   PARTY_NAME,
   PARTY_SHORT_NAME,
   PROVINCES,
 } from "@/data/partyContent";
 import type { MemberFormValues, MemberRecord } from "@/types/party";
 import {
-  createMemberRecord,
   createPreviewMembershipNumber,
+  createMembershipSvg,
   downloadMembershipSvg,
+  getPartyLogoDataUri,
 } from "@/utils/memberCard";
 
 const INITIAL_FORM_VALUES: MemberFormValues = {
-  fullName: "",
+  affirmsDeclaration: false,
   city: "",
-  province: "Punjab",
-  phone: "",
+  cnic: "",
+  confirmsEligibility: false,
   email: "",
-  wing: "General Member",
+  fullName: "",
+  parentOrSpouseName: "",
+  phone: "",
+  province: "",
+  residentialAddress: "",
 };
+
+const CNIC_INPUT_PATTERN = "[0-9]{5}-[0-9]{7}-[0-9]";
+const PHONE_INPUT_PATTERN = "(?:\\+923[0-9]{9}|03[0-9]{9})";
 
 function sanitizePhoneNumber(value: string) {
   const onlyPhoneChars = value.replace(/[^\d+]/g, "");
@@ -32,77 +42,259 @@ function sanitizePhoneNumber(value: string) {
   return hasLeadingPlus ? `+${digits}` : digits;
 }
 
+function sanitizeCnicNumber(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 13);
+  const first = digits.slice(0, 5);
+  const second = digits.slice(5, 12);
+  const third = digits.slice(12, 13);
+
+  return [first, second, third].filter(Boolean).join("-");
+}
+
+function createMembershipPrintDocument(cardSvg: string) {
+  const printableSvg = cardSvg.replace(
+    "<svg ",
+    '<svg class="membership-print-svg" role="img" aria-label="Membership card" ',
+  );
+
+  return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Membership card</title>
+    <style>
+      @page {
+        margin: 0;
+        size: A4 portrait;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        background: #ffffff;
+        height: 100%;
+        margin: 0;
+        width: 100%;
+      }
+
+      body {
+        display: grid;
+        min-height: 100vh;
+        padding: 16px;
+        place-items: center;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .membership-print-svg {
+        display: block;
+        height: auto;
+        max-height: calc(100vh - 32px);
+        max-width: calc(100vw - 32px);
+        width: min(638px, calc(100vw - 32px));
+      }
+
+      @media print {
+        html,
+        body {
+          height: 297mm;
+          width: 210mm;
+        }
+
+        body {
+          min-height: 297mm;
+          padding: 0;
+        }
+
+        .membership-print-svg {
+          max-height: 276mm;
+          max-width: 194mm;
+          width: 194mm;
+        }
+      }
+    </style>
+  </head>
+  <body>${printableSvg}</body>
+</html>`;
+}
+
 export default function MembershipSection() {
   const [formValues, setFormValues] = useState(INITIAL_FORM_VALUES);
   const [memberRecord, setMemberRecord] = useState<MemberRecord | null>(null);
+  const [formMessage, setFormMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const livePreview = useMemo(() => {
     const city = formValues.city.trim();
     const fullName = formValues.fullName.trim();
+    const cityRegion =
+      city && formValues.province ? `${city}, ${formValues.province}` : city;
 
     return {
-      city: city ? `${city}, ${formValues.province}` : "Your city",
+      city: cityRegion || "Your city / tehsil",
       fullName: fullName || "Future member",
       joinedOn: memberRecord?.joinedOn || "Ready today",
       membershipNumber:
         memberRecord?.membershipNumber ||
         createPreviewMembershipNumber(formValues.city),
-      wing: formValues.wing,
     };
   }, [formValues, memberRecord?.joinedOn, memberRecord?.membershipNumber]);
 
-  function updateField(field: keyof MemberFormValues, value: string) {
+  function updateField<K extends keyof MemberFormValues>(
+    field: K,
+    value: MemberFormValues[K],
+  ) {
     setMemberRecord(null);
+    setFormMessage("");
     setFormValues((current) => ({
       ...current,
       [field]: value,
     }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const record = createMemberRecord({
-      fullName: formValues.fullName.trim(),
+    setFormMessage("");
+    setIsSubmitting(true);
+
+    const payload: MemberFormValues = {
+      affirmsDeclaration: formValues.affirmsDeclaration,
       city: formValues.city.trim(),
-      province: formValues.province,
-      phone: formValues.phone.trim(),
+      cnic: formValues.cnic.trim(),
+      confirmsEligibility: formValues.confirmsEligibility,
       email: formValues.email.trim(),
-      wing: formValues.wing,
-    });
-
-    setMemberRecord(record);
-  }
-
-  function printCard() {
-    const cleanupPrintMode = () => {
-      document.body.classList.remove("print-membership-card");
-      window.removeEventListener("afterprint", cleanupPrintMode);
+      fullName: formValues.fullName.trim(),
+      parentOrSpouseName: formValues.parentOrSpouseName.trim(),
+      phone: formValues.phone.trim(),
+      province: formValues.province,
+      residentialAddress: formValues.residentialAddress.trim(),
     };
 
-    document.body.classList.add("print-membership-card");
-    window.addEventListener("afterprint", cleanupPrintMode);
-    window.print();
-    window.setTimeout(cleanupPrintMode, 500);
+    try {
+      const response = await fetch("/api/memberships", {
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+      const result = (await response.json()) as {
+        member?: MemberRecord;
+        message?: string;
+      };
+
+      if (!response.ok || !result.member) {
+        setMemberRecord(null);
+        setFormMessage(
+          result.message || "Membership could not be saved right now.",
+        );
+        return;
+      }
+
+      setMemberRecord(result.member);
+      setFormMessage(
+        "Membership saved securely. Your digital card is ready to download or print.",
+      );
+    } catch {
+      setMemberRecord(null);
+      setFormMessage("Membership could not be saved. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function printCard() {
+    if (!memberRecord) {
+      return;
+    }
+
+    const logoHref = await getPartyLogoDataUri().catch(() => undefined);
+
+    document.getElementById("membership-print-frame")?.remove();
+
+    const printFrame = document.createElement("iframe");
+    printFrame.id = "membership-print-frame";
+    printFrame.setAttribute("aria-hidden", "true");
+    printFrame.setAttribute("title", "Membership card print frame");
+    printFrame.style.border = "0";
+    printFrame.style.height = "0";
+    printFrame.style.position = "fixed";
+    printFrame.style.right = "0";
+    printFrame.style.top = "0";
+    printFrame.style.visibility = "hidden";
+    printFrame.style.width = "0";
+    document.body.appendChild(printFrame);
+
+    const frameDocument = printFrame.contentDocument;
+    const frameWindow = printFrame.contentWindow;
+
+    if (!frameDocument || !frameWindow) {
+      printFrame.remove();
+      return;
+    }
+
+    let cleanupTimer = 0;
+    const cleanupPrintFrame = () => {
+      window.clearTimeout(cleanupTimer);
+      frameWindow.removeEventListener("afterprint", cleanupPrintFrame);
+      printFrame.remove();
+    };
+
+    frameWindow.addEventListener("afterprint", cleanupPrintFrame, {
+      once: true,
+    });
+
+    frameDocument.open();
+    frameDocument.write(
+      createMembershipPrintDocument(createMembershipSvg(memberRecord, logoHref)),
+    );
+    frameDocument.close();
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        cleanupTimer = window.setTimeout(cleanupPrintFrame, 120000);
+        frameWindow.focus();
+        frameWindow.print();
+      });
+    });
   }
 
   return (
     <section id="register" className="section-band registration-band">
       <div className="section-inner registration-layout">
         <div className="registration-copy reveal-up">
-          <p className="eyebrow">Join the movement</p>
-          <h2>Register, generate your card, keep it digital.</h2>
+          <p className="eyebrow">درخواست — Membership</p>
+          <h2>Join Awam Dost Party</h2>
           <p>
-            A modern party site should make membership feel immediate, clear,
-            and accountable. This prototype creates a printable digital card
-            right after a successful local submission.
+            Fill in your details below to apply for party membership. Applicants
+            must confirm the declaration (affidavit) at the bottom of the form.
           </p>
+
+          <ol className="application-steps">
+            <li>
+              <span>01</span>
+              Submit your details and CNIC number
+            </li>
+            <li>
+              <span>02</span>
+              Confirm the membership affidavit
+            </li>
+            <li>
+              <span>03</span>
+              Your local chapter will verify and contact you
+            </li>
+          </ol>
         </div>
 
         <form className="registration-form reveal-up delay-1" onSubmit={handleSubmit}>
-          <label>
+          <label className="form-field">
             <span>Full name</span>
             <input
               required
+              autoComplete="name"
               minLength={3}
               value={formValues.fullName}
               onChange={(event) => updateField("fullName", event.target.value)}
@@ -110,8 +302,52 @@ export default function MembershipSection() {
             />
           </label>
 
-          <label>
-            <span>City / district</span>
+          <label className="form-field">
+            <span>Son / Daughter / Wife of (Walid/Zauj ka naam)</span>
+            <input
+              required
+              minLength={3}
+              value={formValues.parentOrSpouseName}
+              onChange={(event) =>
+                updateField("parentOrSpouseName", event.target.value)
+              }
+              placeholder="Parent or spouse name"
+            />
+          </label>
+
+          <label className="form-field">
+            <span>CNIC number</span>
+            <input
+              required
+              inputMode="numeric"
+              maxLength={15}
+              pattern={CNIC_INPUT_PATTERN}
+              title="Enter CNIC in 12345-1234567-1 format."
+              value={formValues.cnic}
+              onChange={(event) =>
+                updateField("cnic", sanitizeCnicNumber(event.target.value))
+              }
+              placeholder="12345-1234567-1"
+            />
+            <small>Format: 12345-1234567-1</small>
+          </label>
+
+          <label className="form-field">
+            <span>Residential address</span>
+            <textarea
+              required
+              minLength={8}
+              rows={3}
+              value={formValues.residentialAddress}
+              onChange={(event) =>
+                updateField("residentialAddress", event.target.value)
+              }
+              placeholder="House, street, area"
+            />
+          </label>
+
+          <label className="form-field">
+            <span>City / Tehsil</span>
             <input
               required
               value={formValues.city}
@@ -120,12 +356,16 @@ export default function MembershipSection() {
             />
           </label>
 
-          <label>
-            <span>Province / region</span>
+          <label className="form-field">
+            <span>Province</span>
             <select
+              required
               value={formValues.province}
               onChange={(event) => updateField("province", event.target.value)}
             >
+              <option value="" disabled>
+                Select province
+              </option>
               {PROVINCES.map((province) => (
                 <option key={province} value={province}>
                   {province}
@@ -134,27 +374,26 @@ export default function MembershipSection() {
             </select>
           </label>
 
-          <label>
+          <label className="form-field">
             <span>Mobile number</span>
             <input
               required
               autoComplete="tel"
               inputMode="tel"
-              pattern={"(?:\\+92|0)[0-9]*"}
-              title="Enter a Pakistani mobile number starting with +92 or 0."
+              pattern={PHONE_INPUT_PATTERN}
+              title="Enter a Pakistani mobile number like +923439500000 or 03439500000."
               type="tel"
               value={formValues.phone}
               onChange={(event) =>
                 updateField("phone", sanitizePhoneNumber(event.target.value))
               }
-              placeholder="+92 300 0000000"
+              placeholder="0343-9500000"
             />
           </label>
 
-          <label>
-            <span>Email</span>
+          <label className="form-field">
+            <span>Email (optional)</span>
             <input
-              required
               type="email"
               value={formValues.email}
               onChange={(event) => updateField("email", event.target.value)}
@@ -162,33 +401,70 @@ export default function MembershipSection() {
             />
           </label>
 
-          <label>
-            <span>Membership wing</span>
-            <select
-              value={formValues.wing}
-              onChange={(event) => updateField("wing", event.target.value)}
-            >
-              {MEMBER_WINGS.map((wing) => (
-                <option key={wing} value={wing}>
-                  {wing}
-                </option>
-              ))}
-            </select>
-          </label>
+          <fieldset className="affidavit-box">
+            <legend>Affidavit / حلف نامہ</legend>
+            <p>
+              I hereby affirm that the information provided above is true, that
+              I will abide by the constitution and discipline of Awam Dost
+              Party, and that I am not currently a member of any other political
+              party.
+            </p>
 
-          <button type="submit" className="primary-button">
+            <label className="checkbox-field">
+              <input
+                required
+                type="checkbox"
+                checked={formValues.affirmsDeclaration}
+                onChange={(event) =>
+                  updateField("affirmsDeclaration", event.target.checked)
+                }
+              />
+              <span>I affirm the above declaration.</span>
+            </label>
+
+            <label className="checkbox-field">
+              <input
+                required
+                type="checkbox"
+                checked={formValues.confirmsEligibility}
+                onChange={(event) =>
+                  updateField("confirmsEligibility", event.target.checked)
+                }
+              />
+              <span>
+                I confirm I am 18 years or older and a citizen of Pakistan
+                eligible for party membership.
+              </span>
+            </label>
+          </fieldset>
+
+          <button type="submit" className="primary-button" disabled={isSubmitting}>
             <BadgeCheck aria-hidden="true" size={18} />
-            Generate membership card
+            {isSubmitting ? "Saving membership..." : "Generate membership card"}
           </button>
+
+          {formMessage && (
+            <p className={`form-status ${memberRecord ? "is-success" : "is-error"}`}>
+              {formMessage}
+            </p>
+          )}
         </form>
 
         <div className="membership-card-panel reveal-up delay-2">
           <div className="membership-print-card membership-card">
             <div className="card-topline">
-              <span>{PARTY_NAME}</span>
-              <strong>{PARTY_SHORT_NAME}</strong>
+              <span className="card-top-logo">
+                <Image
+                  alt={PARTY_LOGO_ALT}
+                  fill
+                  sizes="164px"
+                  src={PARTY_LOGO_SRC}
+                />
+                <span className="sr-only">{PARTY_SHORT_NAME}</span>
+              </span>
+              <span className="card-party-name">{PARTY_NAME}</span>
+              <span className="card-card-type">Digital membership card</span>
             </div>
-            <div className="card-mark">{PARTY_SHORT_NAME}</div>
             <div>
               <p className="card-label">Member name</p>
               <h3>{livePreview.fullName}</h3>
@@ -203,12 +479,8 @@ export default function MembershipSection() {
                 <strong>{livePreview.joinedOn}</strong>
               </div>
               <div>
-                <p className="card-label">City / Region</p>
+                <p className="card-label">City / Tehsil</p>
                 <strong>{livePreview.city}</strong>
-              </div>
-              <div>
-                <p className="card-label">Wing</p>
-                <strong>{livePreview.wing}</strong>
               </div>
             </div>
           </div>
@@ -217,7 +489,11 @@ export default function MembershipSection() {
             <button
               type="button"
               disabled={!memberRecord}
-              onClick={() => memberRecord && downloadMembershipSvg(memberRecord)}
+              onClick={() => {
+                if (memberRecord) {
+                  void downloadMembershipSvg(memberRecord);
+                }
+              }}
             >
               <Download aria-hidden="true" size={17} />
               Download SVG

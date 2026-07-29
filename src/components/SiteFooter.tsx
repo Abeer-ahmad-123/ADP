@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   Landmark,
@@ -9,8 +10,9 @@ import {
   FOOTER_BANK_DETAILS,
   FOOTER_CONTACTS,
   FOOTER_NAV_GROUPS,
+  PARTY_LOGO_ALT,
+  PARTY_LOGO_SRC,
   PARTY_NAME,
-  PARTY_SHORT_NAME,
   SOCIAL_LINKS,
 } from "@/data/partyContent";
 
@@ -20,7 +22,14 @@ export default function SiteFooter() {
       <div className="section-inner footer-main">
         <div className="footer-brand-panel">
           <Link className="footer-logo" href="/">
-            <span>{PARTY_SHORT_NAME}</span>
+            <span className="footer-logo-mark">
+              <Image
+                alt={PARTY_LOGO_ALT}
+                fill
+                sizes="64px"
+                src={PARTY_LOGO_SRC}
+              />
+            </span>
             <strong>{PARTY_NAME}</strong>
           </Link>
           <p>
@@ -62,16 +71,16 @@ export default function SiteFooter() {
 
           <div className="footer-nav-social">
             <h3>Social</h3>
-              {SOCIAL_LINKS.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {link.label}
-                </a>
-              ))}
+            {SOCIAL_LINKS.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </nav>
 
@@ -82,7 +91,7 @@ export default function SiteFooter() {
             </span>
             <div>
               <p>Funding</p>
-              <h3>Bank transfer details</h3>
+              <h3>Party fund status</h3>
             </div>
           </div>
 
@@ -98,7 +107,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="section-inner footer-social-row">
-        <p>Copyrights © NBP 2026. All rights reserved.</p>
+        <p>Copyrights © ADP 2026. All rights reserved.</p>
       </div>
     </footer>
   );

@@ -1,5 +1,4 @@
 import AgendaSection from "@/components/AgendaSection";
-import RecommendedSections from "@/components/RecommendedSections";
 import { MANIFESTO_POINTS } from "@/data/partyContent";
 
 export default function ManifestoSection() {
@@ -33,7 +32,6 @@ export default function ManifestoSection() {
       </section>
 
       <AgendaSection />
-      <RecommendedSections />
     </>
   );
 }

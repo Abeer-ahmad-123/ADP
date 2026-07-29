@@ -1,4 +1,8 @@
-import { PARTY_NAME, PARTY_SHORT_NAME } from "@/data/partyContent";
+import {
+  PARTY_LOGO_SRC,
+  PARTY_NAME,
+  PARTY_SHORT_NAME,
+} from "@/data/partyContent";
 import type { MemberFormValues, MemberRecord } from "@/types/party";
 
 const FALLBACK_CITY_CODE = "PK";
@@ -102,68 +106,112 @@ export function createMemberRecord(values: MemberFormValues): MemberRecord {
   };
 }
 
-export function createMembershipSvg(record: MemberRecord) {
-  const nameLines = splitSvgLines(record.fullName, 17, 2);
-  const memberNumberLines = splitSvgLines(record.membershipNumber, 24, 1);
+function getDefaultLogoHref() {
+  return typeof window === "undefined"
+    ? PARTY_LOGO_SRC
+    : new URL(PARTY_LOGO_SRC, window.location.origin).href;
+}
+
+export async function getPartyLogoDataUri() {
+  const response = await fetch(PARTY_LOGO_SRC);
+
+  if (!response.ok) {
+    throw new Error("Party logo could not be loaded.");
+  }
+
+  const blob = await response.blob();
+
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Party logo could not be encoded."));
+    });
+    reader.addEventListener("error", () => {
+      reject(new Error("Party logo could not be encoded."));
+    });
+    reader.readAsDataURL(blob);
+  });
+}
+
+export function createMembershipSvg(
+  record: MemberRecord,
+  logoHref = getDefaultLogoHref(),
+) {
+  const nameLines = splitSvgLines(record.fullName, 19, 2);
+  const memberNumberLines = splitSvgLines(record.membershipNumber, 19, 2);
   const cityLines = splitSvgLines(
     `${record.city}, ${record.province}`,
-    18,
+    34,
     1,
   );
-  const wingLines = splitSvgLines(record.wing, 18, 1);
 
   return `<svg width="638" height="760" viewBox="0 0 638 760" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="card_shadow" x="0" y="0" width="638" height="760" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#071814" flood-opacity="0.14"/>
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#071814" flood-opacity="0.26"/>
     </filter>
     <clipPath id="card_clip">
       <rect x="24" y="24" width="590" height="712" rx="28"/>
     </clipPath>
+    <clipPath id="card_logo_clip">
+      <rect x="219" y="62" width="200" height="146" rx="28"/>
+    </clipPath>
     <linearGradient id="card_base" x1="24" y1="24" x2="614" y2="736" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF"/>
-      <stop offset="0.54" stop-color="#F3FBF5"/>
-      <stop offset="1" stop-color="#E7F7E8"/>
+      <stop stop-color="#03170F"/>
+      <stop offset="0.48" stop-color="#063724"/>
+      <stop offset="1" stop-color="#02150E"/>
     </linearGradient>
-    <linearGradient id="card_accent" x1="24" y1="24" x2="614" y2="736" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="0.7" stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="0.701" stop-color="#0F7A58"/>
-      <stop offset="0.88" stop-color="#0F7A58"/>
-      <stop offset="0.881" stop-color="#D8A235"/>
-      <stop offset="1" stop-color="#D8A235"/>
+    <linearGradient id="card_fabric_fold" x1="24" y1="24" x2="614" y2="736" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.14"/>
+      <stop offset="0.18" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="0.34" stop-color="#000000" stop-opacity="0.16"/>
+      <stop offset="0.52" stop-color="#FFFFFF" stop-opacity="0.07"/>
+      <stop offset="0.72" stop-color="#000000" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.05"/>
     </linearGradient>
+    <radialGradient id="card_fabric_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(162 104) rotate(55) scale(288 216)">
+      <stop stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="card_gold_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(442 112) rotate(91) scale(180 164)">
+      <stop stop-color="#D8A235" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#D8A235" stop-opacity="0"/>
+    </radialGradient>
   </defs>
   <rect x="24" y="24" width="590" height="712" rx="28" fill="url(#card_base)" filter="url(#card_shadow)"/>
   <g clip-path="url(#card_clip)">
     <rect x="24" y="24" width="590" height="712" fill="url(#card_base)"/>
-    <path d="M558 24H614V736H506L558 24Z" fill="#0F7A58" opacity="0.92"/>
-    <path d="M604 24H614V736H566L604 24Z" fill="#D8A235" opacity="0.9"/>
-    <circle cx="516" cy="176" r="104" fill="#FFFFFF" opacity="0.08"/>
-    <circle cx="516" cy="176" r="62" fill="#FFFFFF" opacity="0.08"/>
+    <rect x="24" y="24" width="590" height="712" fill="url(#card_fabric_fold)"/>
+    <rect x="24" y="24" width="590" height="712" fill="url(#card_fabric_glow)"/>
+    <rect x="24" y="24" width="590" height="712" fill="url(#card_gold_glow)"/>
+    <path d="M24 98C120 56 196 104 272 78C356 50 448 64 614 28V736H24V98Z" fill="#FFFFFF" opacity="0.045"/>
+    <path d="M24 606C122 570 204 606 292 582C402 552 492 556 614 504V736H24V606Z" fill="#000000" opacity="0.12"/>
   </g>
-  <rect x="24.5" y="24.5" width="589" height="711" rx="27.5" stroke="#071814" stroke-opacity="0.14"/>
-  <text x="70" y="92" fill="#071814" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="950">${PARTY_NAME}</text>
-  <rect x="502" y="58" width="72" height="72" rx="36" fill="#0F7A58" stroke="#D8A235" stroke-opacity="0.74"/>
-  <text x="538" y="94" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="950" text-anchor="middle" dominant-baseline="middle">${PARTY_SHORT_NAME}</text>
-  <rect x="70" y="164" width="136" height="136" rx="68" fill="#0F7A58"/>
-  <text x="138" y="232" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="45" font-weight="950" text-anchor="middle" dominant-baseline="middle">${PARTY_SHORT_NAME}</text>
-  <text x="70" y="360" fill="#5A675F" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="900">MEMBER NAME</text>
-  <text x="70" y="408" fill="#071814" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="950">${renderSvgLines(nameLines, { x: 70, lineHeight: 44 })}</text>
-  <text x="70" y="520" fill="#5A675F" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">MEMBERSHIP NO.</text>
-  <text x="70" y="556" fill="#071814" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${renderSvgLines(memberNumberLines, { x: 70, lineHeight: 28 })}</text>
-  <text x="342" y="520" fill="#5A675F" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">JOINED</text>
-  <text x="342" y="556" fill="#071814" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${escapeXml(record.joinedOn)}</text>
-  <text x="70" y="638" fill="#5A675F" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">CITY / REGION</text>
-  <text x="70" y="674" fill="#071814" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${renderSvgLines(cityLines, { x: 70, lineHeight: 28 })}</text>
-  <text x="342" y="638" fill="#5A675F" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">WING</text>
-  <text x="342" y="674" fill="#071814" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${renderSvgLines(wingLines, { x: 342, lineHeight: 28 })}</text>
-  <text x="520" y="358" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="70" font-weight="950" opacity="0.18" text-anchor="middle">${PARTY_SHORT_NAME}</text>
+  <rect x="24.5" y="24.5" width="589" height="711" rx="27.5" stroke="#D8A235" stroke-opacity="0.34"/>
+  <image href="${escapeXml(logoHref)}" x="219" y="62" width="200" height="146" preserveAspectRatio="xMidYMid slice" clip-path="url(#card_logo_clip)"/>
+  <rect x="219.5" y="62.5" width="199" height="145" rx="27.5" stroke="#D8A235" stroke-opacity="0.64"/>
+  <text x="319" y="252" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="950" text-anchor="middle">${escapeXml(PARTY_NAME)}</text>
+  <text x="319" y="282" fill="#D8A235" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="900" letter-spacing="1.8" text-anchor="middle">DIGITAL MEMBERSHIP CARD</text>
+  <text x="70" y="362" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="900">MEMBER NAME</text>
+  <text x="70" y="410" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="950">${renderSvgLines(nameLines, { x: 70, lineHeight: 44 })}</text>
+  <text x="70" y="520" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">MEMBERSHIP NO.</text>
+  <text x="70" y="556" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${renderSvgLines(memberNumberLines, { x: 70, lineHeight: 28 })}</text>
+  <text x="342" y="520" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">JOINED</text>
+  <text x="342" y="556" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${escapeXml(record.joinedOn)}</text>
+  <text x="70" y="638" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">CITY / TEHSIL</text>
+  <text x="70" y="674" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${renderSvgLines(cityLines, { x: 70, lineHeight: 28 })}</text>
+  <text x="319" y="720" fill="#FFFFFF" fill-opacity="0.72" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="900" letter-spacing="1.4" text-anchor="middle">SAB SE PEHLE AWAM</text>
 </svg>`;
 }
 
-export function downloadMembershipSvg(record: MemberRecord) {
-  const blob = new Blob([createMembershipSvg(record)], {
+export async function downloadMembershipSvg(record: MemberRecord) {
+  const logoHref = await getPartyLogoDataUri().catch(() => getDefaultLogoHref());
+  const blob = new Blob([createMembershipSvg(record, logoHref)], {
     type: "image/svg+xml;charset=utf-8",
   });
   const url = URL.createObjectURL(blob);

@@ -14,34 +14,18 @@ import {
 } from "lucide-react";
 import type {
   AgendaItem,
-  BookSpread,
+  ApproachPoint,
   ManifestoPoint,
-  RecommendedSection,
   SocialLink,
-  Stat,
 } from "@/types/party";
 
-export const PARTY_NAME = "Nayi Subah Party";
-export const PARTY_SHORT_NAME = "NSP";
-export const PARTY_TAGLINE = "Insaf, Taleem, Rozgar, and transparent public service.";
-
-export const STATS: Stat[] = [
-  {
-    label: "District cells",
-    value: "128",
-    detail: "organizing committees ready for pilot launch",
-  },
-  {
-    label: "Manifesto pillars",
-    value: "07",
-    detail: "clear priorities for the first 100 days",
-  },
-  {
-    label: "Member wings",
-    value: "05",
-    detail: "youth, women, labour, overseas, and volunteers",
-  },
-];
+export const PARTY_NAME = "Awam Dost Party";
+export const PARTY_SHORT_NAME = "ADP";
+export const PARTY_TAGLINE = "Sab se pehle awam.";
+export const PARTY_CHAIRMAN_NAME = "Gohar Nawaz Sandhu";
+export const PARTY_LOGO_SRC = "/brand/awam-dost-party-logo.png";
+export const PARTY_LOGO_ALT =
+  "Awam Dost Party flag logo with people, stars, wheat branches, Urdu party name, and slogan.";
 
 export const MANIFESTO_POINTS: ManifestoPoint[] = [
   {
@@ -59,6 +43,29 @@ export const MANIFESTO_POINTS: ManifestoPoint[] = [
   {
     title: "Jobs near home",
     copy: "Back small businesses, apprenticeships, and export-ready makers with simpler permits and fair financing.",
+  },
+];
+
+export const APPROACH_POINTS: ApproachPoint[] = [
+  {
+    number: "01",
+    title: "Pragmatism over rhetoric",
+    copy: "Policies judged by what works in Pakistan's actual circumstances, not slogans.",
+  },
+  {
+    number: "02",
+    title: "Party discipline",
+    copy: "Members and representatives act within the party's constitution and collective decisions.",
+  },
+  {
+    number: "03",
+    title: "National, not regional",
+    copy: "Organized to represent all provinces and communities of Pakistan.",
+  },
+  {
+    number: "04",
+    title: "Service to Awam",
+    copy: "Every chapter accountable to the members and citizens it represents.",
   },
 ];
 
@@ -89,39 +96,6 @@ export const AGENDA_ITEMS: AgendaItem[] = [
   },
 ];
 
-export const RECOMMENDED_SECTIONS: RecommendedSection[] = [
-  {
-    title: "Leadership & Candidates",
-    copy: "Profiles, city work, financial disclosures, and contact links for every public representative.",
-    tag: "Trust",
-  },
-  {
-    title: "Events & Rallies",
-    copy: "A calendar with city filters, RSVP, volunteer check-in, accessibility notes, and livestream links.",
-    tag: "Mobilize",
-  },
-  {
-    title: "Newsroom",
-    copy: "Press releases, policy explainers, speech transcripts, downloadable media kits, and fact checks.",
-    tag: "Media",
-  },
-  {
-    title: "Volunteer Portal",
-    copy: "Shift signup, door-to-door scripts, training materials, phone bank dashboards, and local team chat.",
-    tag: "Organize",
-  },
-  {
-    title: "Policy Lab",
-    copy: "Long-form policy drafts, citizen feedback, expert reviews, cost estimates, and implementation plans.",
-    tag: "Ideas",
-  },
-  {
-    title: "Transparency Report",
-    copy: "Donation summaries, spending categories, procurement policies, audit letters, and compliance updates.",
-    tag: "Finance",
-  },
-];
-
 export const TIMELINE_ITEMS = [
   "100-day public service scorecard",
   "District manifesto town halls",
@@ -140,15 +114,6 @@ export const PROVINCES = [
   "Islamabad Capital Territory",
 ];
 
-export const MEMBER_WINGS = [
-  "General Member",
-  "Youth Wing",
-  "Women Wing",
-  "Labour Wing",
-  "Overseas Supporter",
-  "Volunteer Organizer",
-];
-
 export const SOCIAL_LINKS: SocialLink[] = [
   { label: "Twitter", href: "https://example.com/x" },
   { label: "Facebook", href: "https://example.com/facebook" },
@@ -159,27 +124,44 @@ export const SOCIAL_LINKS: SocialLink[] = [
 
 export const FOOTER_NAV_GROUPS = [
   {
+    title: "Public",
+    links: [
+      { label: "Manifesto", href: "/manifesto" },
+      { label: "News", href: "/news" },
+      { label: "Blogs", href: "/blogs" },
+      { label: "Announcements", href: "/announcements" },
+    ],
+  },
+  {
     title: "Movement",
     links: [
-      { label: "Manifesto", href: "#manifesto" },
-      { label: "Agenda", href: "#agenda" },
+      { label: "Agenda", href: "/#agenda" },
       { label: "Book", href: "/book" },
-      { label: "Membership", href: "#register" },
+      { label: "Membership", href: "/#register" },
+      { label: "Funding", href: "/#funding" },
+    ],
+  },
+  {
+    title: "People",
+    links: [
+      { label: "Leadership", href: "/leadership" },
+      { label: "Audio", href: "/media#audio" },
+      { label: "Video Reels", href: "/media#video-reels" },
     ],
   },
 ];
 
 export const FOOTER_CONTACTS = [
-  { label: "info@nsp.example", href: "mailto:info@nsp.example" },
-  { label: "+92 300 0000000", href: "tel:+923000000000" },
-  { label: "Islamabad campaign secretariat", href: "#funding" },
+  { label: "info@adp.example", href: "mailto:info@adp.example" },
+  { label: "0343-9500000", href: "tel:+923439500000" },
+  { label: "Islamabad campaign secretariat", href: "/#funding" },
 ];
 
 export const FOOTER_BANK_DETAILS = [
-  { label: "Account title", value: "NSP Public Campaign Fund (Demo)" },
-  { label: "Bank", value: "Aitbaar Civic Bank (Sample)" },
-  { label: "IBAN", value: "PK00 DEMO 0000 0000 0000 0000" },
-  { label: "Reference", value: "Member number or city name" },
+  { label: "Status", value: "Bank account will be added later" },
+  { label: "Timeline", value: "After approval and audit setup" },
+  { label: "Current note", value: "No online donations are collected here" },
+  { label: "Reference", value: "Official funding details will be published publicly" },
 ];
 
 export const FOOTER_ACTIONS = [
@@ -191,55 +173,4 @@ export const FOOTER_ACTIONS = [
   { label: "Event schedule", Icon: CalendarDays },
   { label: "Policy briefings", Icon: Newspaper },
   { label: "Coalition partners", Icon: Handshake },
-];
-
-export const BOOK_SPREADS: BookSpread[] = [
-  {
-    pageNumber: 1,
-    kicker: "Foreword",
-    title: "The Morning We Choose",
-    body: "A nation does not change because one person speaks louder. It changes when ordinary people are invited into the work with dignity, evidence, and a plan they can inspect.",
-  },
-  {
-    pageNumber: 2,
-    kicker: "Chapter 01",
-    title: "A Contract With Citizens",
-    body: "The first promise is simple: every claim must be measurable. If a road is announced, the timeline, cost, contractor, and inspection notes should be public before applause begins.",
-  },
-  {
-    pageNumber: 3,
-    kicker: "Chapter 02",
-    title: "Schools As Engines",
-    body: "Our classrooms should prepare a young person for livelihood and leadership. That means trained teachers, technology that is useful, and skills linked to the economy around them.",
-  },
-  {
-    pageNumber: 4,
-    kicker: "Chapter 03",
-    title: "Cities That Listen",
-    body: "A mohalla knows its problems before a ministry does. Local councils need clean budgets, fast complaint handling, and public meetings where outcomes are recorded, not forgotten.",
-  },
-  {
-    pageNumber: 5,
-    kicker: "Chapter 04",
-    title: "The Economy Of Trust",
-    body: "Small businesses need fewer closed doors. A fair permit system, digital tax guidance, and access to responsible finance can turn family ambition into national production.",
-  },
-  {
-    pageNumber: 6,
-    kicker: "Chapter 05",
-    title: "Healthcare Close To Home",
-    body: "A clinic with medicine, trained staff, and a referral connection can save families from panic. The state must be felt first where people actually stand in line.",
-  },
-  {
-    pageNumber: 7,
-    kicker: "Chapter 06",
-    title: "Clean Politics",
-    body: "Funding should be visible, conflict should be declared, and decisions should survive scrutiny. Public service is not a mystery room. It is a ledger and a duty.",
-  },
-  {
-    pageNumber: 8,
-    kicker: "Closing",
-    title: "A Party That Reports Back",
-    body: "The measure of a movement is not the size of its stage. It is whether citizens can see what changed, who did the work, and what remains unfinished.",
-  },
 ];

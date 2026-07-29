@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import {
   AGENDA_ITEMS,
+  PARTY_LOGO_SRC,
   PARTY_SHORT_NAME,
   TIMELINE_ITEMS,
 } from "@/data/partyContent";
@@ -17,7 +19,8 @@ const CARD_LAUNCH_VECTORS = [
 
 export default function AgendaSection() {
   const [isActive, setIsActive] = useState(false);
-  const hasExitedAboveRef = useRef(true);
+  const isReadyToAnimateFromTopRef = useRef(true);
+  const restartFrameRef = useRef<number | null>(null);
   const lastScrollYRef = useRef(0);
   const sectionRef = useRef<HTMLElement | null>(null);
 
@@ -48,10 +51,17 @@ export default function AgendaSection() {
         lastScrollYRef.current = currentScrollY;
 
         if (entry.isIntersecting) {
-          if (isScrollingDown && hasExitedAboveRef.current) {
+          if (isScrollingDown && isReadyToAnimateFromTopRef.current) {
+            if (restartFrameRef.current !== null) {
+              globalThis.cancelAnimationFrame(restartFrameRef.current);
+            }
+
             setIsActive(false);
-            globalThis.requestAnimationFrame(() => setIsActive(true));
-            hasExitedAboveRef.current = false;
+            restartFrameRef.current = globalThis.requestAnimationFrame(() => {
+              setIsActive(true);
+              restartFrameRef.current = null;
+            });
+            isReadyToAnimateFromTopRef.current = false;
             return;
           }
 
@@ -59,20 +69,35 @@ export default function AgendaSection() {
           return;
         }
 
-        if (entry.boundingClientRect.bottom <= 0) {
-          hasExitedAboveRef.current = true;
+        const viewportHeight =
+          entry.rootBounds?.height ?? globalThis.innerHeight;
+
+        if (entry.boundingClientRect.top >= viewportHeight) {
+          isReadyToAnimateFromTopRef.current = true;
           setIsActive(false);
+          return;
+        }
+
+        if (entry.boundingClientRect.bottom <= 0) {
+          isReadyToAnimateFromTopRef.current = false;
+          setIsActive(true);
         }
       },
       {
-        rootMargin: "0px 0px -20% 0px",
-        threshold: 0.28,
+        rootMargin: "0px",
+        threshold: 0.01,
       },
     );
 
     observer.observe(section);
 
-    return () => observer.disconnect();
+    return () => {
+      if (restartFrameRef.current !== null) {
+        globalThis.cancelAnimationFrame(restartFrameRef.current);
+      }
+
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -96,7 +121,15 @@ export default function AgendaSection() {
         <div className="agenda-launch-stage">
           <div className="agenda-origin" aria-hidden="true">
             <span className="agenda-logo-ring" />
-            <span className="agenda-logo-mark">{PARTY_SHORT_NAME}</span>
+            <span className="agenda-logo-mark">
+              <Image
+                alt=""
+                fill
+                sizes="96px"
+                src={PARTY_LOGO_SRC}
+              />
+              <span className="sr-only">{PARTY_SHORT_NAME}</span>
+            </span>
           </div>
 
           <div className="agenda-grid agenda-launch-grid">

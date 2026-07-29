@@ -1,3 +1,4 @@
+import ApproachSection from "@/components/ApproachSection";
 import BookSection from "@/components/BookSection";
 import HeroSection from "@/components/HeroSection";
 import ManifestoSection from "@/components/ManifestoSection";
@@ -10,6 +11,7 @@ export default function PartyLanding() {
     <main>
       <SiteHeader />
       <HeroSection />
+      <ApproachSection />
       <ManifestoSection />
       <MembershipSection />
       <BookSection />
