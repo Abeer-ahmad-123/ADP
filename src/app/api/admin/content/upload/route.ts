@@ -32,6 +32,19 @@ function readText(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
 
+function isBlobUploadHref(value: string) {
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "https:" &&
+      url.hostname.endsWith(".blob.vercel-storage.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function isUploadContentKind(value: string): value is UploadContentKind {
   return value === "audio" || value === "video_reel" || value === "gallery_photo";
 }
@@ -47,8 +60,13 @@ export async function POST(request: Request) {
   const kind = readText(formData, "kind");
   const title = readText(formData, "title");
   const summary = readText(formData, "summary");
+  const uploadedMediaUrl = readText(formData, "mediaUrl");
 
   if (!isUploadContentKind(kind) || title.length < 2) {
+    return redirectToUploadSection(request, "upload-invalid", kind);
+  }
+
+  if (uploadedMediaUrl && !isBlobUploadHref(uploadedMediaUrl)) {
     return redirectToUploadSection(request, "upload-invalid", kind);
   }
 
@@ -56,12 +74,13 @@ export async function POST(request: Request) {
 
   try {
     mediaUrl =
-      kind === "gallery_photo"
+      uploadedMediaUrl ||
+      (kind === "gallery_photo"
         ? await saveGalleryImageUpload(formData.get("file"))
         : await saveMediaUpload({
             file: formData.get("file"),
             kind,
-          });
+          }));
 
     await createContentEntry({
       body: "",

@@ -91,117 +91,119 @@ export default function FeedbackForm() {
   }
 
   return (
-    <div className="section-inner feedback-panel">
-      <div className="feedback-copy">
-        <p className="eyebrow">Public help desk</p>
-        <h2>Complaints and suggestions</h2>
-        <p>
-          Share a district issue, civic concern, or practical idea with Awam
-          Dost Party. Every message is kept in the official admin record.
-        </p>
-        <span>
-          <ShieldCheck aria-hidden="true" size={17} />
-          Reviewed by authorized party admins
-        </span>
-        <div className="feedback-route-list" aria-label="Feedback categories">
-          <small>Complaint</small>
-          <small>Suggestion</small>
-          <small>District issue</small>
-        </div>
-      </div>
-
-      <form className="feedback-form" onSubmit={handleSubmit}>
-        <div className="feedback-form-heading">
-          <MessageSquareText aria-hidden="true" size={20} />
-          <div>
-            <p>Complaint / suggestion</p>
-            <h3>Write to the party</h3>
+    <section className="feedback-section-band">
+      <div className="section-inner feedback-panel">
+        <div className="feedback-copy">
+          <p className="eyebrow">Public help desk</p>
+          <h2>Complaints and suggestions</h2>
+          <p>
+            Share a district issue, civic concern, or practical idea with Awam
+            Dost Party. Every message is kept in the official admin record.
+          </p>
+          <span>
+            <ShieldCheck aria-hidden="true" size={17} />
+            Reviewed by authorized party admins
+          </span>
+          <div className="feedback-route-list" aria-label="Feedback categories">
+            <small>Complaint</small>
+            <small>Suggestion</small>
+            <small>District issue</small>
           </div>
         </div>
 
-        <div className="feedback-form-grid">
-          <label>
-            <span>Message type</span>
-            <select
-              required
-              value={formValues.kind}
-              onChange={(event) =>
-                updateField("kind", event.target.value as PublicFeedbackKind)
-              }
+        <form className="feedback-form" onSubmit={handleSubmit}>
+          <div className="feedback-form-heading">
+            <MessageSquareText aria-hidden="true" size={20} />
+            <div>
+              <p>Complaint / suggestion</p>
+              <h3>Write to the party</h3>
+            </div>
+          </div>
+
+          <div className="feedback-form-grid">
+            <label>
+              <span>Message type</span>
+              <select
+                required
+                value={formValues.kind}
+                onChange={(event) =>
+                  updateField("kind", event.target.value as PublicFeedbackKind)
+                }
+              >
+                <option value="suggestion">Suggestion</option>
+                <option value="complaint">Complaint</option>
+              </select>
+            </label>
+            <label>
+              <span>Full name</span>
+              <input
+                required
+                value={formValues.fullName}
+                onChange={(event) => updateField("fullName", event.target.value)}
+                placeholder="Your full name"
+              />
+            </label>
+            <label>
+              <span>City / Tehsil</span>
+              <input
+                required
+                value={formValues.city}
+                onChange={(event) => updateField("city", event.target.value)}
+                placeholder="Lahore"
+              />
+            </label>
+            <label>
+              <span>Mobile number</span>
+              <input
+                required
+                inputMode="tel"
+                pattern={PHONE_INPUT_PATTERN}
+                value={formValues.phone}
+                onChange={(event) =>
+                  updateField("phone", sanitizePhoneNumber(event.target.value))
+                }
+                placeholder="03439500000"
+              />
+            </label>
+            <label className="wide-field">
+              <span>Email (optional)</span>
+              <input
+                type="email"
+                value={formValues.email}
+                onChange={(event) => updateField("email", event.target.value)}
+                placeholder="name@example.com"
+              />
+            </label>
+            <label className="wide-field">
+              <span>Message</span>
+              <textarea
+                required
+                minLength={12}
+                maxLength={1200}
+                value={formValues.message}
+                onChange={(event) => updateField("message", event.target.value)}
+                placeholder="Write your complaint or suggestion..."
+                rows={5}
+              />
+            </label>
+          </div>
+
+          <button className="primary-button" disabled={isSubmitting} type="submit">
+            <Send aria-hidden="true" size={17} />
+            {isSubmitting ? "Saving message..." : "Submit message"}
+          </button>
+
+          {formMessage && (
+            <p
+              className={`form-status ${
+                formMessage.startsWith("Thank you") ? "is-success" : "is-error"
+              }`}
             >
-              <option value="suggestion">Suggestion</option>
-              <option value="complaint">Complaint</option>
-            </select>
-          </label>
-          <label>
-            <span>Full name</span>
-            <input
-              required
-              value={formValues.fullName}
-              onChange={(event) => updateField("fullName", event.target.value)}
-              placeholder="Your full name"
-            />
-          </label>
-          <label>
-            <span>City / Tehsil</span>
-            <input
-              required
-              value={formValues.city}
-              onChange={(event) => updateField("city", event.target.value)}
-              placeholder="Lahore"
-            />
-          </label>
-          <label>
-            <span>Mobile number</span>
-            <input
-              required
-              inputMode="tel"
-              pattern={PHONE_INPUT_PATTERN}
-              value={formValues.phone}
-              onChange={(event) =>
-                updateField("phone", sanitizePhoneNumber(event.target.value))
-              }
-              placeholder="03439500000"
-            />
-          </label>
-          <label className="wide-field">
-            <span>Email (optional)</span>
-            <input
-              type="email"
-              value={formValues.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              placeholder="name@example.com"
-            />
-          </label>
-          <label className="wide-field">
-            <span>Message</span>
-            <textarea
-              required
-              minLength={12}
-              maxLength={1200}
-              value={formValues.message}
-              onChange={(event) => updateField("message", event.target.value)}
-              placeholder="Write your complaint or suggestion..."
-              rows={5}
-            />
-          </label>
-        </div>
-
-        <button className="primary-button" disabled={isSubmitting} type="submit">
-          <Send aria-hidden="true" size={17} />
-          {isSubmitting ? "Saving message..." : "Submit message"}
-        </button>
-
-        {formMessage && (
-          <p
-            className={`form-status ${
-              formMessage.startsWith("Thank you") ? "is-success" : "is-error"
-            }`}
-          >
-            {formMessage}
-          </p>
-        )}
-      </form>
-    </div>
+              {formMessage}
+            </p>
+          )}
+        </form>
+      </div>
+    </section>
   );
 }

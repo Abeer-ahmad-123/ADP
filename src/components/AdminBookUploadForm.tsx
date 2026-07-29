@@ -28,15 +28,7 @@ export default function AdminBookUploadForm() {
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-
-  async function submitBookForm(formData: FormData) {
-    const response = await fetch("/api/admin/book/upload", {
-      body: formData,
-      method: "POST",
-    });
-
-    window.location.assign(response.url || "/admin");
-  }
+  const [statusLabel, setStatusLabel] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,8 +51,9 @@ export default function AdminBookUploadForm() {
     }
 
     setError("");
-    setProgress(0);
+    setProgress(1);
     setIsUploading(true);
+    setStatusLabel("Preparing upload");
 
     try {
       const blob = await upload(
@@ -72,6 +65,7 @@ export default function AdminBookUploadForm() {
           handleUploadUrl: "/api/admin/book/blob-upload",
           multipart: true,
           onUploadProgress: (event) => {
+            setStatusLabel("Uploading PDF");
             setProgress(event.percentage);
           },
         },
@@ -83,18 +77,23 @@ export default function AdminBookUploadForm() {
       createFormData.set("author", String(formData.get("author") || ""));
       createFormData.set("pdfHref", blob.url);
 
-      await submitBookForm(createFormData);
+      setStatusLabel("Saving book");
+
+      const response = await fetch("/api/admin/book/upload", {
+        body: createFormData,
+        method: "POST",
+      });
+
+      window.location.assign(response.url || "/admin/books");
     } catch (error) {
-      try {
-        await submitBookForm(formData);
-      } catch {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Book PDF could not be uploaded.",
-        );
-        setIsUploading(false);
-      }
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Book PDF could not be uploaded.",
+      );
+      setIsUploading(false);
+      setStatusLabel("");
+      setProgress(0);
     }
   }
 
@@ -123,7 +122,9 @@ export default function AdminBookUploadForm() {
         <input name="file" required type="file" accept="application/pdf,.pdf" />
       </label>
       <button className="primary-button" disabled={isUploading} type="submit">
-        {isUploading ? `Uploading ${Math.round(progress)}%` : "Upload book"}
+        {isUploading
+          ? `${statusLabel || "Uploading"} ${Math.round(progress)}%`
+          : "Upload book"}
       </button>
       {error && <p className="form-status is-error">{error}</p>}
     </form>

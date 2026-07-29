@@ -2795,8 +2795,9 @@ a {
 }
 
 .book-stage {
+  border-radius: 8px;
+  box-shadow: 0 24px 30px rgba(0, 0, 0, 0.24);
   display: grid;
-  filter: drop-shadow(0 24px 30px rgba(0, 0, 0, 0.3));
   grid-template-columns: repeat(2, minmax(0, 1fr));
   height: var(--book-page-height);
   min-height: var(--book-page-height);
@@ -2980,11 +2981,6 @@ a {
   will-change: transform;
 }
 
-.turning-face.page-back .book-page {
-  transform: scaleX(-1);
-  transform-origin: center;
-}
-
 .turning-paper::after {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.28), transparent 28%, rgba(71, 42, 16, 0.08)),
@@ -3146,6 +3142,34 @@ a {
   white-space: nowrap;
 }
 
+.feedback-section-band {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(216, 162, 53, 0.13), transparent 26%),
+    radial-gradient(circle at 88% 8%, rgba(15, 122, 88, 0.24), transparent 32%),
+    linear-gradient(180deg, #071814 0%, #04100d 100%);
+  color: white;
+  overflow: hidden;
+  padding: 58px 24px 36px;
+  position: relative;
+}
+
+.feedback-section-band::before {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 96px 96px;
+  content: "";
+  inset: 0;
+  opacity: 0.18;
+  pointer-events: none;
+  position: absolute;
+}
+
+.feedback-section-band > .section-inner {
+  position: relative;
+  z-index: 1;
+}
+
 .feedback-panel {
   align-items: stretch;
   background:
@@ -3158,7 +3182,6 @@ a {
   display: grid;
   gap: clamp(20px, 3.4vw, 38px);
   grid-template-columns: minmax(290px, 0.74fr) minmax(0, 1.26fr);
-  margin-bottom: 34px;
   overflow: hidden;
   padding: clamp(18px, 3vw, 28px);
   position: relative;
@@ -4823,30 +4846,24 @@ a {
 
 @keyframes page-turn-next {
   0% {
-    filter: brightness(1) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.12));
     transform: rotateY(0deg);
   }
   50% {
-    filter: brightness(0.72) drop-shadow(-22px 18px 20px rgba(0, 0, 0, 0.22));
     transform: rotateY(-96deg) translateX(-2px);
   }
   100% {
-    filter: brightness(1) drop-shadow(-28px 22px 22px rgba(0, 0, 0, 0.08));
     transform: rotateY(-180deg);
   }
 }
 
 @keyframes page-turn-previous {
   0% {
-    filter: brightness(1) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.12));
     transform: rotateY(0deg);
   }
   50% {
-    filter: brightness(0.72) drop-shadow(22px 18px 20px rgba(0, 0, 0, 0.22));
     transform: rotateY(96deg) translateX(2px);
   }
   100% {
-    filter: brightness(1) drop-shadow(28px 22px 22px rgba(0, 0, 0, 0.08));
     transform: rotateY(180deg);
   }
 }

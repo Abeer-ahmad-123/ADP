@@ -1,6 +1,6 @@
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
-import { del } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 
 const MAX_MEDIA_UPLOAD_BYTES = 120 * 1024 * 1024;
 const MAX_BOOK_UPLOAD_BYTES = 40 * 1024 * 1024;
@@ -74,6 +74,10 @@ export async function saveMediaUpload({
     maxBytes: MAX_MEDIA_UPLOAD_BYTES,
   });
 
+  if (canUseVercelBlob()) {
+    return saveBlobUpload(file, `media/${kind}`);
+  }
+
   return savePublicUpload(file, `media/${kind}`);
 }
 
@@ -124,6 +128,10 @@ function saveImageUpload(file: File, directory: string) {
     file,
     maxBytes: MAX_IMAGE_UPLOAD_BYTES,
   });
+
+  if (canUseVercelBlob()) {
+    return saveBlobUpload(file, directory);
+  }
 
   return savePublicUpload(file, directory);
 }
@@ -182,4 +190,21 @@ async function savePublicUpload(file: File, directory: string) {
   await writeFile(targetPath, Buffer.from(await file.arrayBuffer()));
 
   return relativePath;
+}
+
+function canUseVercelBlob() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+}
+
+async function saveBlobUpload(file: File, directory: string) {
+  const filename = `${Date.now()}-${sanitizeFilename(file.name)}`;
+  const pathname = `${directory}/${filename}`;
+  const blob = await put(pathname, file, {
+    access: "public",
+    addRandomSuffix: false,
+    contentType: file.type || undefined,
+    multipart: file.size > 8 * 1024 * 1024,
+  });
+
+  return blob.url;
 }
