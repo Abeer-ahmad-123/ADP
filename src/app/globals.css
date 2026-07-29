@@ -2824,6 +2824,41 @@ a {
   z-index: 4;
 }
 
+.book-pdf-fallback {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 24px 30px rgba(0, 0, 0, 0.24);
+  display: grid;
+  gap: 12px;
+  min-height: var(--book-page-height);
+  overflow: hidden;
+  padding: 10px;
+}
+
+.book-pdf-fallback iframe {
+  background: #ffffff;
+  border: 0;
+  border-radius: 6px;
+  display: block;
+  height: calc(var(--book-page-height) - 64px);
+  min-height: 520px;
+  width: 100%;
+}
+
+.book-pdf-fallback a {
+  align-items: center;
+  background: var(--leaf);
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 850;
+  justify-self: center;
+  min-height: 42px;
+  padding: 0 18px;
+  text-decoration: none;
+}
+
 .book-page {
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.05), transparent 10%, transparent 90%, rgba(0, 0, 0, 0.06)),
@@ -5469,6 +5504,11 @@ a {
 
   .book-page-image {
     transform: scale(1.18);
+  }
+
+  .book-pdf-fallback iframe {
+    height: calc(var(--book-page-height) - 62px);
+    min-height: 0;
   }
 
   .book-toolbar {

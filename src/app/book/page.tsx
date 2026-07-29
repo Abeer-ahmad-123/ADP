@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import BookReader from "@/components/BookReader";
 import JsonLd from "@/components/JsonLd";
 import SiteFooter from "@/components/SiteFooter";
@@ -171,7 +170,12 @@ export default async function BookPage({ searchParams }: BookRouteProps) {
             )}
           </div> */}
 
-          <BookReader pages={book.pages} partyName={PARTY_NAME} title={bookTitle} />
+          <BookReader
+            pages={book.pages}
+            partyName={PARTY_NAME}
+            pdfHref={book.pdfHref}
+            title={bookTitle}
+          />
         </div>
       </section>
       <SiteFooter />

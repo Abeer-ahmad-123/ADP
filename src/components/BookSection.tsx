@@ -26,6 +26,7 @@ export default async function BookSection() {
             compact
             pages={book.pages}
             partyName={PARTY_NAME}
+            pdfHref={book.pdfHref}
             title={bookTitle}
           />
         </div>

@@ -112,7 +112,7 @@ export default async function AdminBooksPage({
                     <span>{book.subtitle}</span>
                   </td>
                   <td>{book.author || "—"}</td>
-                  <td>{book.pageCount}</td>
+                  <td>{book.pageCount || (book.pdfHref ? "PDF" : 0)}</td>
                   <td>
                     <span
                       className={
