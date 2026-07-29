@@ -1,5 +1,6 @@
 import { execFile } from "child_process";
-import { mkdir, rename, rm } from "fs/promises";
+import { mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises";
+import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
 import type { BookSpread } from "@/types/party";
@@ -22,6 +23,52 @@ function resolvePublicUploadFile(href: string) {
   }
 
   return filePath;
+}
+
+function isRemotePdfHref(value: string) {
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "https:" &&
+      url.pathname.toLowerCase().endsWith(".pdf")
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function preparePdfForRendering(href: string) {
+  if (href.startsWith("/uploads/")) {
+    return {
+      cleanup: async () => {},
+      pdfPath: resolvePublicUploadFile(href),
+    };
+  }
+
+  if (!isRemotePdfHref(href)) {
+    throw new Error("Uploaded PDF href must point to a PDF file.");
+  }
+
+  const response = await fetch(href);
+
+  if (!response.ok) {
+    throw new Error("Uploaded PDF could not be downloaded for page rendering.");
+  }
+
+  const temporaryDirectory = await mkdtemp(
+    path.join(tmpdir(), "awam-dost-book-"),
+  );
+  const pdfPath = path.join(temporaryDirectory, "source.pdf");
+
+  await writeFile(pdfPath, Buffer.from(await response.arrayBuffer()));
+
+  return {
+    cleanup: async () => {
+      await rm(temporaryDirectory, { force: true, recursive: true });
+    },
+    pdfPath,
+  };
 }
 
 function getBookPagesPaths(bookId: number) {
@@ -104,8 +151,7 @@ export async function generateBookPagesFromPdf({
   pdfHref: string;
   title: string;
 }): Promise<BookSpread[]> {
-  const pdfPath = resolvePublicUploadFile(pdfHref);
-  const pageCount = await getPdfPageCount(pdfPath);
+  const preparedPdf = await preparePdfForRendering(pdfHref);
   const { finalDirectory, pagesRoot, relativeDirectory } =
     getBookPagesPaths(bookId);
   const temporaryDirectory = path.join(
@@ -117,6 +163,7 @@ export async function generateBookPagesFromPdf({
   await mkdir(temporaryDirectory, { recursive: true });
 
   try {
+    const pageCount = await getPdfPageCount(preparedPdf.pdfPath);
     const pages: BookSpread[] = [];
 
     for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
@@ -134,7 +181,7 @@ export async function generateBookPagesFromPdf({
           "-l",
           String(pageNumber),
           "-singlefile",
-          pdfPath,
+          preparedPdf.pdfPath,
           outputBase,
         ],
         {
@@ -162,5 +209,7 @@ export async function generateBookPagesFromPdf({
     await rm(temporaryDirectory, { force: true, recursive: true });
 
     throw error;
+  } finally {
+    await preparedPdf.cleanup();
   }
 }

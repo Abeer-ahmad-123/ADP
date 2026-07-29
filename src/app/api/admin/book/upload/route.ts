@@ -30,6 +30,20 @@ function readText(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
 
+function isBlobPdfHref(value: string) {
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "https:" &&
+      url.hostname.endsWith(".blob.vercel-storage.com") &&
+      url.pathname.toLowerCase().endsWith(".pdf")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
   const session = getAdminSessionFromRequest(request);
 
@@ -42,8 +56,13 @@ export async function POST(request: Request) {
     const title = readText(formData, "title");
     const subtitle = readText(formData, "subtitle");
     const author = readText(formData, "author");
+    const uploadedBlobHref = readText(formData, "pdfHref");
 
     if (title.length < 2 || subtitle.length < 2 || author.length < 2) {
+      return redirectToAdmin(request, "book-invalid");
+    }
+
+    if (uploadedBlobHref && !isBlobPdfHref(uploadedBlobHref)) {
       return redirectToAdmin(request, "book-invalid");
     }
 
@@ -51,7 +70,7 @@ export async function POST(request: Request) {
     let createdBook: Awaited<ReturnType<typeof createBook>> = null;
 
     try {
-      bookPdfHref = await saveBookPdfUpload(formData.get("file"));
+      bookPdfHref = uploadedBlobHref || (await saveBookPdfUpload(formData.get("file")));
       createdBook = await createBook({
         author,
         pdfHref: bookPdfHref,

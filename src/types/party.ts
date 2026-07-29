@@ -47,6 +47,22 @@ export type MemberRecord = MemberFormValues & {
   joinedOn: string;
 };
 
+export type PublicFeedbackKind = "complaint" | "suggestion";
+
+export type PublicFeedbackValues = {
+  kind: PublicFeedbackKind;
+  fullName: string;
+  city: string;
+  phone: string;
+  email: string;
+  message: string;
+};
+
+export type PublicFeedbackRecord = PublicFeedbackValues & {
+  id: number;
+  createdAt: string;
+};
+
 export type BookSpread = {
   pageNumber: number;
   kicker: string;

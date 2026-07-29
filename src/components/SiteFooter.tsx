@@ -6,6 +6,7 @@ import {
   MapPin,
   Phone,
 } from "lucide-react";
+import FeedbackForm from "@/components/FeedbackForm";
 import {
   FOOTER_BANK_DETAILS,
   FOOTER_CONTACTS,
@@ -19,6 +20,8 @@ import {
 export default function SiteFooter() {
   return (
     <footer id="funding" className="site-footer no-print">
+      <FeedbackForm />
+
       <div className="section-inner footer-main">
         <div className="footer-brand-panel">
           <Link className="footer-logo" href="/">

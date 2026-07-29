@@ -9,6 +9,7 @@ import {
   PlusCircle,
   ScrollText,
 } from "lucide-react";
+import AdminBookUploadForm from "@/components/AdminBookUploadForm";
 import AdminDeleteBookForm from "@/components/AdminDeleteBookForm";
 import AdminDeleteMembershipForm from "@/components/AdminDeleteMembershipForm";
 import AdminPublishForm from "@/components/AdminPublishForm";
@@ -16,6 +17,7 @@ import { PARTY_NAME, PROVINCES } from "@/data/partyContent";
 import { getAdminSessionFromCookies } from "@/lib/adminAuth";
 import { listAdminBooks } from "@/lib/bookRepository";
 import { listContentEntries } from "@/lib/contentRepository";
+import { listPublicFeedback } from "@/lib/feedbackRepository";
 import {
   getManifestoDocument,
   type ManifestoDocument,
@@ -71,18 +73,21 @@ const STATUS_MESSAGES: Record<string, string> = {
 };
 
 type MembershipAdminRecord = Awaited<ReturnType<typeof listStoredMemberships>>[number];
+type PublicFeedbackAdminRecord = Awaited<ReturnType<typeof listPublicFeedback>>[number];
 
 async function loadDashboardData() {
   const result: {
     books: PublicBookSummary[];
     contentEntries: ContentEntry[];
     error: string;
+    feedback: PublicFeedbackAdminRecord[];
     manifesto: ManifestoDocument;
     memberships: MembershipAdminRecord[];
   } = {
     books: [],
     contentEntries: [],
     error: "",
+    feedback: [],
     manifesto: {
       pdfHref: "",
       summary: "",
@@ -94,17 +99,19 @@ async function loadDashboardData() {
   };
 
   try {
-    const [memberships, contentEntries, books, manifesto] = await Promise.all([
+    const [memberships, contentEntries, books, manifesto, feedback] = await Promise.all([
       listStoredMemberships(),
       listContentEntries(),
       listAdminBooks(),
       getManifestoDocument(),
+      listPublicFeedback(),
     ]);
 
     return {
       ...result,
       books,
       contentEntries,
+      feedback,
       manifesto,
       memberships,
     };
@@ -181,6 +188,11 @@ export default async function AdminDashboardPage({
           <strong>{mediaCount}</strong>
           <p>Audio files and video reels available for public pages.</p>
         </article>
+        <article>
+          <span>Feedback</span>
+          <strong>{dashboard.feedback.length}</strong>
+          <p>Public complaints and suggestions submitted from the website.</p>
+        </article>
       </section>
 
       <section className="admin-grid">
@@ -211,45 +223,7 @@ export default async function AdminDashboardPage({
                 <h2>Upload a public book</h2>
               </div>
             </div>
-            <form
-              action="/api/admin/book/upload"
-              method="post"
-              encType="multipart/form-data"
-              className="admin-form compact"
-            >
-              <label>
-                <span>Book title</span>
-                <input
-                  name="title"
-                  required
-                  placeholder="Book title"
-                />
-              </label>
-              <label>
-                <span>Subtitle</span>
-                <textarea
-                  name="subtitle"
-                  required
-                  placeholder="Book subtitle"
-                  rows={3}
-                />
-              </label>
-              <label>
-                <span>Author</span>
-                <input
-                  name="author"
-                  required
-                  placeholder="Book author"
-                />
-              </label>
-              <label>
-                <span>PDF file</span>
-                <input name="file" required type="file" accept="application/pdf,.pdf" />
-              </label>
-              <button className="primary-button" type="submit">
-                Upload book
-              </button>
-            </form>
+            <AdminBookUploadForm />
           </article>
         </div>
 
@@ -381,6 +355,61 @@ export default async function AdminDashboardPage({
               </button>
             </form>
           </article>
+        </div>
+      </section>
+
+      <section className="admin-panel">
+        <div className="admin-table-heading">
+          <div>
+            <p>Public feedback</p>
+            <h2>Complaints and suggestions</h2>
+            <span>
+              Messages submitted from the website form above the public footer.
+            </span>
+          </div>
+        </div>
+
+        <div className="admin-table-scroll">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Sender</th>
+                <th>City</th>
+                <th>Phone</th>
+                <th>Message</th>
+                <th>Received</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dashboard.feedback.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <span
+                      className={`admin-status-pill ${
+                        item.kind === "complaint" ? "is-complaint" : "is-published"
+                      }`}
+                    >
+                      {item.kind}
+                    </span>
+                  </td>
+                  <td>
+                    <strong>{item.fullName}</strong>
+                    {item.email && <span>{item.email}</span>}
+                  </td>
+                  <td>{item.city}</td>
+                  <td>{item.phone}</td>
+                  <td className="admin-message-cell">{item.message}</td>
+                  <td>{item.createdAt}</td>
+                </tr>
+              ))}
+              {dashboard.feedback.length === 0 && (
+                <tr>
+                  <td colSpan={6}>No complaints or suggestions have been submitted yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 

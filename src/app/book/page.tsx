@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Download } from "lucide-react";
 import BookReader from "@/components/BookReader";
 import JsonLd from "@/components/JsonLd";
 import SiteFooter from "@/components/SiteFooter";
@@ -119,14 +118,6 @@ export default async function BookPage({ searchParams }: BookRouteProps) {
             <p className="eyebrow">Digital party book</p>
             <h1>{bookTitle}</h1>
             <p>{book.subtitle || "Read the public book in the page-turning reader."}</p>
-            {book.pdfHref && (
-              <div className="public-hero-actions">
-                <a className="primary-button no-print" href={book.pdfHref} download>
-                  <Download aria-hidden="true" size={18} />
-                  Download PDF
-                </a>
-              </div>
-            )}
           </div>
 
           <div className="public-hero-visual book-hero-visual" aria-hidden="true">
@@ -167,11 +158,6 @@ export default async function BookPage({ searchParams }: BookRouteProps) {
                 <span>{item.subtitle || "Public party book."}</span>
                 <div className="book-library-meta">
                   <small>{item.pageCount} reader pages</small>
-                  {item.pdfHref && (
-                    <a href={item.pdfHref} download>
-                      PDF
-                    </a>
-                  )}
                 </div>
                 <Link href={`/book?book=${item.slug}`}>
                   {item.slug === book.slug ? "Currently open" : "Open reader"}
@@ -185,16 +171,7 @@ export default async function BookPage({ searchParams }: BookRouteProps) {
             )}
           </div>
 
-          {book.pages.length > 0 || !book.pdfHref ? (
-            <BookReader pages={book.pages} partyName={PARTY_NAME} title={bookTitle} />
-          ) : (
-            <div className="book-pdf-viewer-panel">
-              <iframe
-                src={book.pdfHref}
-                title={`${bookTitle} PDF`}
-              />
-            </div>
-          )}
+          <BookReader pages={book.pages} partyName={PARTY_NAME} title={bookTitle} />
         </div>
       </section>
       <SiteFooter />

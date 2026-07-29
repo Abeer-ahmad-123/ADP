@@ -41,6 +41,22 @@ create unique index if not exists memberships_cnic_unique_idx
   where cnic <> '';
 create index if not exists memberships_city_idx on memberships (city);
 
+create table if not exists public_feedback (
+  id bigserial primary key,
+  kind text not null check (kind in ('complaint', 'suggestion')),
+  full_name text not null,
+  city text not null,
+  phone text not null,
+  email text not null default '',
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists public_feedback_created_at_idx
+  on public_feedback (created_at desc);
+create index if not exists public_feedback_kind_created_at_idx
+  on public_feedback (kind, created_at desc);
+
 create table if not exists admin_users (
   id bigserial primary key,
   username text not null unique,

@@ -1,5 +1,6 @@
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
+import { del } from "@vercel/blob";
 
 const MAX_MEDIA_UPLOAD_BYTES = 120 * 1024 * 1024;
 const MAX_BOOK_UPLOAD_BYTES = 40 * 1024 * 1024;
@@ -118,6 +119,16 @@ export async function saveLeadershipImageUpload(file: FormDataEntryValue | null)
 }
 
 export async function deletePublicUpload(href: string) {
+  if (isVercelBlobHref(href)) {
+    try {
+      await del(href);
+    } catch {
+      // Missing remote files should not block content edits.
+    }
+
+    return;
+  }
+
   if (!href.startsWith("/uploads/")) {
     return;
   }
@@ -135,6 +146,19 @@ export async function deletePublicUpload(href: string) {
     await unlink(targetPath);
   } catch {
     // Missing local files should not block content edits.
+  }
+}
+
+function isVercelBlobHref(value: string) {
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "https:" &&
+      url.hostname.endsWith(".blob.vercel-storage.com")
+    );
+  } catch {
+    return false;
   }
 }
 

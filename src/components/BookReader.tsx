@@ -2,8 +2,18 @@
 
 import { type AnimationEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Landmark,
+  LockKeyhole,
+  Mail,
+  RotateCcw,
+} from "lucide-react";
 import type { BookSpread } from "@/types/party";
+
+const PUBLIC_PREVIEW_PAGE_LIMIT = 4;
 
 type TurnDirection = "next" | "previous" | null;
 
@@ -88,6 +98,37 @@ function renderTurningPage(page: BookSpread, className: string, bookTitle: strin
   return renderBookPage(page, `turning-paper ${className}`, bookTitle, true);
 }
 
+function renderLockedNotice(partyName: string, lockedPageCount: number) {
+  return (
+    <div className="book-locked-panel">
+      <div className="book-lock-mark">
+        <LockKeyhole aria-hidden="true" size={28} />
+      </div>
+      <p className="eyebrow">Preview complete</p>
+      <h3>Buy to unlock the complete book.</h3>
+      <p>
+        The first four pages are open for public preview. To unlock the full
+        book, pay at the official party bank account and share your payment
+        reference with the email address where you want to receive the book.
+      </p>
+      <div className="book-unlock-notes">
+        <span>
+          <Landmark aria-hidden="true" size={17} />
+          {partyName} bank details are listed in the funding section.
+        </span>
+        <span>
+          <Mail aria-hidden="true" size={17} />
+          The complete book will be emailed within 12 hours after confirmation.
+        </span>
+      </div>
+      <Link className="primary-button" href="/#funding">
+        View funding details
+      </Link>
+      <small>{lockedPageCount} pages are locked in this public preview.</small>
+    </div>
+  );
+}
+
 export default function BookReader({
   compact = false,
   pages,
@@ -98,20 +139,30 @@ export default function BookReader({
   const [turn, setTurn] = useState<BookTurn | null>(null);
   const isMobileBook = useMediaQuery("(max-width: 700px)");
   const pageStep = isMobileBook ? 1 : 2;
-  const hasPages = pages.length > 0;
-  const maxStartIndex = Math.max(pages.length - pageStep, 0);
+  const visiblePages = useMemo(
+    () => pages.slice(0, PUBLIC_PREVIEW_PAGE_LIMIT),
+    [pages],
+  );
+  const hasLockedPages = pages.length > visiblePages.length;
+  const lockedPageCount = Math.max(pages.length - visiblePages.length, 0);
+  const hasPages = visiblePages.length > 0;
+  const lockedIndex = visiblePages.length;
+  const maxReadableStartIndex = Math.max(visiblePages.length - pageStep, 0);
+  const maxStartIndex = hasLockedPages ? lockedIndex : maxReadableStartIndex;
   const safePageIndex = Math.min(pageIndex, maxStartIndex);
+  const isLockedSpread = hasLockedPages && safePageIndex >= lockedIndex;
+  const readablePageIndex = Math.min(safePageIndex, maxReadableStartIndex);
   const bookTitle = title || "Book Reader";
 
-  const leftPage = pages[safePageIndex];
-  const rightPage = pages[safePageIndex + 1] ?? leftPage;
-  const currentMobilePage = pages[safePageIndex];
+  const leftPage = visiblePages[readablePageIndex];
+  const rightPage = visiblePages[readablePageIndex + 1] ?? leftPage;
+  const currentMobilePage = visiblePages[readablePageIndex];
   const targetMobilePage = turn
-    ? pages[turn.targetIndex]
+    ? visiblePages[turn.targetIndex]
     : currentMobilePage;
-  const targetLeftPage = turn ? pages[turn.targetIndex] : leftPage;
+  const targetLeftPage = turn ? visiblePages[turn.targetIndex] : leftPage;
   const targetRightPage = turn
-    ? pages[turn.targetIndex + 1] ?? targetLeftPage
+    ? visiblePages[turn.targetIndex + 1] ?? targetLeftPage
     : rightPage;
   const visibleLeftPage =
     turn?.direction === "previous" ? targetLeftPage : leftPage;
@@ -132,12 +183,15 @@ export default function BookReader({
     () =>
       !hasPages
         ? "No pages"
+        : isLockedSpread
+          ? "Locked pages"
         :
       isMobileBook
         ? `Page ${targetMobilePage.pageNumber}`
         : `Pages ${targetLeftPage.pageNumber}-${targetRightPage.pageNumber}`,
     [
       hasPages,
+      isLockedSpread,
       isMobileBook,
       targetLeftPage?.pageNumber,
       targetMobilePage?.pageNumber,
@@ -150,9 +204,17 @@ export default function BookReader({
       return;
     }
 
+    const targetIndex = Math.min(safePageIndex + pageStep, maxStartIndex);
+
+    if (hasLockedPages && targetIndex >= lockedIndex) {
+      setPageIndex(lockedIndex);
+      setTurn(null);
+      return;
+    }
+
     setTurn({
       direction: "next",
-      targetIndex: Math.min(safePageIndex + pageStep, maxStartIndex),
+      targetIndex,
     });
   }
 
@@ -161,14 +223,28 @@ export default function BookReader({
       return;
     }
 
+    const targetIndex = Math.max(safePageIndex - pageStep, 0);
+
+    if (isLockedSpread) {
+      setPageIndex(targetIndex);
+      setTurn(null);
+      return;
+    }
+
     setTurn({
       direction: "previous",
-      targetIndex: Math.max(safePageIndex - pageStep, 0),
+      targetIndex,
     });
   }
 
   function resetBook() {
     if (isTurning || isFirstSpread) {
+      return;
+    }
+
+    if (isLockedSpread) {
+      setPageIndex(0);
+      setTurn(null);
       return;
     }
 
@@ -203,12 +279,14 @@ export default function BookReader({
 
       {hasPages ? (
         <div
-          className={`book-stage ${isMobileBook ? "mobile-book-stage" : ""} ${turn?.direction === "next" ? "is-turning-next" : ""} ${
+          className={`book-stage ${isLockedSpread ? "is-locked-stage" : ""} ${isMobileBook ? "mobile-book-stage" : ""} ${turn?.direction === "next" ? "is-turning-next" : ""} ${
             turn?.direction === "previous" ? "is-turning-previous" : ""
           }`}
           aria-live="polite"
         >
-          {isMobileBook ? (
+          {isLockedSpread ? (
+            renderLockedNotice(partyName, lockedPageCount)
+          ) : isMobileBook ? (
             renderBookPage(
               turn ? targetMobilePage : currentMobilePage,
               "mobile-page",
