@@ -45,6 +45,28 @@ function isFilledFile(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.size > 0;
 }
 
+async function tryGenerateBookPages({
+  bookId,
+  pdfHref,
+  title,
+}: {
+  bookId: number;
+  pdfHref: string;
+  title: string;
+}) {
+  try {
+    return await generateBookPagesFromPdf({
+      bookId,
+      pdfHref,
+      title,
+    });
+  } catch (error) {
+    console.warn("Book PDF was saved without generated reader pages.", error);
+
+    return [];
+  }
+}
+
 async function updateBookEntry(request: Request, formData: FormData) {
   const id = readBookId(formData);
 
@@ -75,7 +97,7 @@ async function updateBookEntry(request: Request, formData: FormData) {
   if (isFilledFile(pdfFile)) {
     uploadedPdfHref = await saveBookPdfUpload(pdfFile);
     pdfHref = uploadedPdfHref;
-    generatedPages = await generateBookPagesFromPdf({
+    generatedPages = await tryGenerateBookPages({
       bookId: id,
       pdfHref,
       title,

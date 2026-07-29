@@ -1,8 +1,9 @@
 import { execFile } from "child_process";
-import { mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises";
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
+import { del, list, put } from "@vercel/blob";
 import type { BookSpread } from "@/types/party";
 
 const execFileAsync = promisify(execFile);
@@ -84,6 +85,96 @@ function getBookPagesPaths(bookId: number) {
   };
 }
 
+function canUseVercelBlobPages() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+}
+
+function getBookPagesBlobPrefix(bookId: number) {
+  return `book-pages/${bookId}/`;
+}
+
+function getBookPageBlobPathname(bookId: number, paddedPageNumber: string) {
+  return `${getBookPagesBlobPrefix(bookId)}page-${paddedPageNumber}.png`;
+}
+
+async function deleteGeneratedBlobPageImages(bookId: number) {
+  if (!canUseVercelBlobPages()) {
+    return;
+  }
+
+  const urls: string[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const result = await list({
+      cursor,
+      limit: 1000,
+      prefix: getBookPagesBlobPrefix(bookId),
+    });
+
+    urls.push(...result.blobs.map((blob) => blob.url));
+    cursor = result.cursor;
+  } while (cursor);
+
+  if (urls.length > 0) {
+    await del(urls);
+  }
+}
+
+async function deleteStaleBlobPageImages(
+  bookId: number,
+  currentPathnames: Set<string>,
+) {
+  if (!canUseVercelBlobPages()) {
+    return;
+  }
+
+  const staleUrls: string[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const result = await list({
+      cursor,
+      limit: 1000,
+      prefix: getBookPagesBlobPrefix(bookId),
+    });
+
+    staleUrls.push(
+      ...result.blobs
+        .filter((blob) => !currentPathnames.has(blob.pathname))
+        .map((blob) => blob.url),
+    );
+    cursor = result.cursor;
+  } while (cursor);
+
+  if (staleUrls.length > 0) {
+    await del(staleUrls);
+  }
+}
+
+async function uploadGeneratedBookPageImage({
+  bookId,
+  imagePath,
+  paddedPageNumber,
+}: {
+  bookId: number;
+  imagePath: string;
+  paddedPageNumber: string;
+}) {
+  const pathname = getBookPageBlobPathname(bookId, paddedPageNumber);
+  const blob = await put(pathname, await readFile(imagePath), {
+    access: "public",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "image/png",
+  });
+
+  return {
+    imageSrc: blob.url,
+    pathname,
+  };
+}
+
 async function getPdfPageCount(pdfPath: string) {
   const { stdout } = await execFileAsync("pdfinfo", [pdfPath], {
     encoding: "utf8",
@@ -139,7 +230,10 @@ async function replaceGeneratedDirectory({
 export async function deleteGeneratedBookPageImages(bookId: number) {
   const { finalDirectory } = getBookPagesPaths(bookId);
 
-  await rm(finalDirectory, { force: true, recursive: true });
+  await Promise.all([
+    rm(finalDirectory, { force: true, recursive: true }),
+    deleteGeneratedBlobPageImages(bookId),
+  ]);
 }
 
 export async function generateBookPagesFromPdf({
@@ -154,10 +248,10 @@ export async function generateBookPagesFromPdf({
   const preparedPdf = await preparePdfForRendering(pdfHref);
   const { finalDirectory, pagesRoot, relativeDirectory } =
     getBookPagesPaths(bookId);
-  const temporaryDirectory = path.join(
-    pagesRoot,
-    `.tmp-${bookId}-${Date.now()}`,
-  );
+  const useBlobPages = canUseVercelBlobPages();
+  const temporaryDirectory = useBlobPages
+    ? await mkdtemp(path.join(tmpdir(), `awam-dost-book-pages-${bookId}-`))
+    : path.join(pagesRoot, `.tmp-${bookId}-${Date.now()}`);
 
   await rm(temporaryDirectory, { force: true, recursive: true });
   await mkdir(temporaryDirectory, { recursive: true });
@@ -165,6 +259,7 @@ export async function generateBookPagesFromPdf({
   try {
     const pageCount = await getPdfPageCount(preparedPdf.pdfPath);
     const pages: BookSpread[] = [];
+    const currentBlobPathnames = new Set<string>();
 
     for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
       const paddedPageNumber = String(pageNumber).padStart(3, "0");
@@ -189,20 +284,38 @@ export async function generateBookPagesFromPdf({
         },
       );
 
+      const generatedImagePath = `${outputBase}.png`;
+      const blobPage = useBlobPages
+        ? await uploadGeneratedBookPageImage({
+            bookId,
+            imagePath: generatedImagePath,
+            paddedPageNumber,
+          })
+        : null;
+
+      if (blobPage) {
+        currentBlobPathnames.add(blobPage.pathname);
+      }
+
       pages.push({
         body: "",
         imageAlt: `${title}, page ${pageNumber}`,
-        imageSrc: `${relativeDirectory}/page-${paddedPageNumber}.png`,
+        imageSrc:
+          blobPage?.imageSrc || `${relativeDirectory}/page-${paddedPageNumber}.png`,
         kicker: "",
         pageNumber,
         title: "",
       });
     }
 
-    await replaceGeneratedDirectory({
-      finalDirectory,
-      temporaryDirectory,
-    });
+    if (useBlobPages) {
+      await deleteStaleBlobPageImages(bookId, currentBlobPathnames);
+    } else {
+      await replaceGeneratedDirectory({
+        finalDirectory,
+        temporaryDirectory,
+      });
+    }
 
     return pages;
   } catch (error) {
@@ -210,6 +323,10 @@ export async function generateBookPagesFromPdf({
 
     throw error;
   } finally {
+    if (useBlobPages) {
+      await rm(temporaryDirectory, { force: true, recursive: true });
+    }
+
     await preparedPdf.cleanup();
   }
 }

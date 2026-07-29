@@ -44,6 +44,28 @@ function isBlobPdfHref(value: string) {
   }
 }
 
+async function tryGenerateBookPages({
+  bookId,
+  pdfHref,
+  title,
+}: {
+  bookId: number;
+  pdfHref: string;
+  title: string;
+}) {
+  try {
+    return await generateBookPagesFromPdf({
+      bookId,
+      pdfHref,
+      title,
+    });
+  } catch (error) {
+    console.warn("Book PDF was saved without generated reader pages.", error);
+
+    return [];
+  }
+}
+
 export async function POST(request: Request) {
   const session = getAdminSessionFromRequest(request);
 
@@ -82,7 +104,7 @@ export async function POST(request: Request) {
         throw new Error("Book could not be created.");
       }
 
-      const pages = await generateBookPagesFromPdf({
+      const pages = await tryGenerateBookPages({
         bookId: createdBook.id,
         pdfHref: bookPdfHref,
         title,
