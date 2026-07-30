@@ -103,7 +103,9 @@ export async function POST(request: Request) {
     }
 
     return redirectToAdmin(request, "book-created");
-  } catch {
+  } catch (error) {
+    console.error("Admin book upload failed.", error);
+
     return redirectToAdmin(request, "book-error");
   }
 }
