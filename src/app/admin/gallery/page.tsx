@@ -83,7 +83,10 @@ export default async function AdminGalleryPage({
             replacement images, or delete gallery entries.
           </span>
         </div>
-        <Link className="secondary-button dark-button" href="/admin/content">
+        <Link
+          className="secondary-button dark-button"
+          href="/admin/content?kind=gallery_photo"
+        >
           <FileText aria-hidden="true" size={17} />
           Manage gallery entries
         </Link>
@@ -131,7 +134,7 @@ export default async function AdminGalleryPage({
                   <p>{photo.summary}</p>
                   <Link
                     className="admin-file-link"
-                    href={`/admin/content#entry-${photo.id}`}
+                    href={`/admin/content?kind=gallery_photo#entry-${photo.id}`}
                   >
                     Manage photo
                   </Link>

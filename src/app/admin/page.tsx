@@ -81,7 +81,7 @@ const ADMIN_SECTION_CARDS = [
     title: "Publish content",
   },
   {
-    href: "/admin/content",
+    href: "/admin/content?kind=news",
     icon: FileText,
     kicker: "Manage",
     summary: "Edit, hide, replace files, or delete saved public content.",

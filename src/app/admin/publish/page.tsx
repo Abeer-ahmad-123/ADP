@@ -93,7 +93,7 @@ export default async function AdminPublishPage({
           </div>
         </div>
 
-        <AdminPublishForm />
+        <AdminPublishForm initialKind={params.kind} />
       </section>
 
       <section className="admin-panel admin-action-panel">
@@ -105,7 +105,10 @@ export default async function AdminPublishPage({
             the content manager.
           </span>
         </div>
-        <Link className="secondary-button dark-button" href="/admin/content">
+        <Link
+          className="secondary-button dark-button"
+          href="/admin/content?kind=news"
+        >
           <FileText aria-hidden="true" size={17} />
           Manage content
         </Link>

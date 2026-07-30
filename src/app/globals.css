@@ -3905,6 +3905,64 @@ a {
   margin: 10px 0 0;
 }
 
+.admin-content-type-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 auto 18px;
+  max-width: 1240px;
+}
+
+.admin-content-type-card {
+  background: rgba(251, 255, 248, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+  color: var(--ink);
+  min-height: 154px;
+  padding: 20px;
+  text-decoration: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-content-type-card:hover,
+.admin-content-type-card:focus-visible,
+.admin-content-type-card.is-active {
+  border-color: rgba(216, 162, 53, 0.48);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.26);
+  transform: translateY(-3px);
+}
+
+.admin-content-type-card.is-active {
+  background: linear-gradient(135deg, #fffaf0 0%, #eff8ef 100%);
+}
+
+.admin-content-type-card span {
+  color: var(--green);
+  display: block;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.admin-content-type-card strong {
+  display: block;
+  font-size: 38px;
+  line-height: 1;
+  margin-top: 12px;
+}
+
+.admin-content-type-card p {
+  color: var(--muted-ink);
+  font-weight: 750;
+  line-height: 1.5;
+  margin: 12px 0 0;
+}
+
 .admin-panel-heading,
 .admin-table-heading {
   align-items: flex-start;
@@ -4083,6 +4141,18 @@ a {
   margin-top: 0 !important;
   padding: 9px 12px;
   white-space: nowrap;
+}
+
+.admin-content-heading-actions {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.admin-content-heading-actions .dark-button {
+  margin-top: 0;
 }
 
 .admin-media-stats {
@@ -5157,6 +5227,7 @@ a {
   .admin-stat-grid,
   .admin-grid,
   .admin-section-grid,
+  .admin-content-type-grid,
   .admin-gallery-list {
     grid-template-columns: 1fr;
   }
@@ -5174,9 +5245,18 @@ a {
 
   .admin-action-panel,
   .admin-current-document,
+  .admin-content-heading-actions,
   .admin-content-card-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-content-heading-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-content-heading-actions .dark-button {
+    width: 100%;
   }
 
   .admin-content-meta,

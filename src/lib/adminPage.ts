@@ -41,7 +41,7 @@ export const ADMIN_STATUS_MESSAGES: Record<string, string> = {
 export const MISSING_DATABASE_MESSAGE =
   "DATABASE_URL is not configured yet. Set it in .env.local and run npm run db:schema.";
 
-export type AdminSearchParams = Promise<{ status?: string }>;
+export type AdminSearchParams = Promise<{ kind?: string; status?: string }>;
 
 export function getAdminStatusMessage(status?: string) {
   return status ? ADMIN_STATUS_MESSAGES[status] || "" : "";

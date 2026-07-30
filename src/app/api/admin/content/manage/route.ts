@@ -18,12 +18,27 @@ import type { ContentKind } from "@/types/party";
 
 export const runtime = "nodejs";
 
+const CONTENT_KINDS: ContentKind[] = [
+  "announcement",
+  "audio",
+  "blog",
+  "gallery_photo",
+  "leadership_profile",
+  "news",
+  "party_activity",
+  "video_reel",
+];
+
 function redirectToContentManager(
   request: Request,
   status: string,
   entryId?: number,
+  kind?: ContentKind,
 ) {
   const url = new URL("/admin/content", request.url);
+  if (kind) {
+    url.searchParams.set("kind", kind);
+  }
   url.searchParams.set("status", status);
 
   if (entryId) {
@@ -35,6 +50,16 @@ function redirectToContentManager(
 
 function readText(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
+}
+
+function isContentKind(value: string): value is ContentKind {
+  return CONTENT_KINDS.includes(value as ContentKind);
+}
+
+function readContentKind(formData: FormData) {
+  const kind = readText(formData, "kind");
+
+  return isContentKind(kind) ? kind : undefined;
 }
 
 function readEntryId(formData: FormData) {
@@ -87,13 +112,23 @@ async function updateEntry(request: Request, formData: FormData) {
   const id = readEntryId(formData);
 
   if (!id) {
-    return redirectToContentManager(request, "content-manage-invalid");
+    return redirectToContentManager(
+      request,
+      "content-manage-invalid",
+      undefined,
+      readContentKind(formData),
+    );
   }
 
   const existing = await getContentEntryById(id);
 
   if (!existing) {
-    return redirectToContentManager(request, "content-manage-missing");
+    return redirectToContentManager(
+      request,
+      "content-manage-missing",
+      undefined,
+      readContentKind(formData),
+    );
   }
 
   const title = readText(formData, "title");
@@ -110,7 +145,12 @@ async function updateEntry(request: Request, formData: FormData) {
       title,
     })
   ) {
-    return redirectToContentManager(request, "content-manage-invalid", id);
+    return redirectToContentManager(
+      request,
+      "content-manage-invalid",
+      id,
+      existing.kind,
+    );
   }
 
   let mediaUrl = existing.mediaUrl;
@@ -173,6 +213,7 @@ async function updateEntry(request: Request, formData: FormData) {
     request,
     updated ? "content-updated" : "content-manage-missing",
     id,
+    existing.kind,
   );
 }
 
@@ -180,13 +221,23 @@ async function deleteEntry(request: Request, formData: FormData) {
   const id = readEntryId(formData);
 
   if (!id) {
-    return redirectToContentManager(request, "content-manage-invalid");
+    return redirectToContentManager(
+      request,
+      "content-manage-invalid",
+      undefined,
+      readContentKind(formData),
+    );
   }
 
   const existing = await getContentEntryById(id);
 
   if (!existing) {
-    return redirectToContentManager(request, "content-manage-missing");
+    return redirectToContentManager(
+      request,
+      "content-manage-missing",
+      undefined,
+      readContentKind(formData),
+    );
   }
 
   const deleted = await deleteContentEntry(id);
@@ -201,6 +252,8 @@ async function deleteEntry(request: Request, formData: FormData) {
   return redirectToContentManager(
     request,
     deleted ? "content-deleted" : "content-manage-missing",
+    undefined,
+    existing.kind,
   );
 }
 
@@ -223,7 +276,12 @@ export async function POST(request: Request) {
       return await deleteEntry(request, formData);
     }
 
-    return redirectToContentManager(request, "content-manage-invalid");
+    return redirectToContentManager(
+      request,
+      "content-manage-invalid",
+      undefined,
+      readContentKind(formData),
+    );
   } catch {
     return redirectToContentManager(request, "content-manage-error");
   }

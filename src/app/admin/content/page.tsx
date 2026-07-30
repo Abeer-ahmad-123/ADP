@@ -5,6 +5,7 @@ import {
   Edit3,
   ExternalLink,
   FileText,
+  PlusCircle,
 } from "lucide-react";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminDeleteContentForm from "@/components/AdminDeleteContentForm";
@@ -45,6 +46,71 @@ const PUBLIC_KIND_HREFS: Record<ContentKind, string> = {
   video_reel: "/media#video-reels",
 };
 
+const CONTENT_MANAGER_SECTIONS = [
+  {
+    createHref: "/admin/publish?kind=news",
+    createLabel: "Create news",
+    kind: "news",
+    managerTitle: "news entries",
+    summary: "Public updates and press-style posts.",
+  },
+  {
+    createHref: "/admin/publish?kind=blog",
+    createLabel: "Create blog",
+    kind: "blog",
+    managerTitle: "blog posts",
+    summary: "Longer notes, policy explanations, and opinion posts.",
+  },
+  {
+    createHref: "/admin/publish?kind=announcement",
+    createLabel: "Create announcement",
+    kind: "announcement",
+    managerTitle: "announcements",
+    summary: "Popup notices and public announcement archive entries.",
+  },
+  {
+    createHref: "/admin/publish?kind=leadership_profile",
+    createLabel: "Create profile",
+    kind: "leadership_profile",
+    managerTitle: "leadership profiles",
+    summary: "Public team profiles and leadership page records.",
+  },
+  {
+    createHref: "/admin/gallery",
+    createLabel: "Upload photo",
+    kind: "gallery_photo",
+    managerTitle: "gallery photos",
+    summary: "Photo gallery images, captions, and publish status.",
+  },
+  {
+    createHref: "/admin/media",
+    createLabel: "Upload audio",
+    kind: "audio",
+    managerTitle: "audio messages",
+    summary: "Audio uploads shown on the public media page.",
+  },
+  {
+    createHref: "/admin/media",
+    createLabel: "Upload video",
+    kind: "video_reel",
+    managerTitle: "video reels",
+    summary: "Video uploads shown on the public media page.",
+  },
+  {
+    kind: "party_activity",
+    managerTitle: "party activities",
+    summary: "Activity entries used by public website sections.",
+  },
+] satisfies Array<{
+  createHref?: string;
+  createLabel?: string;
+  kind: ContentKind;
+  managerTitle: string;
+  summary: string;
+}>;
+
+const DEFAULT_CONTENT_KIND: ContentKind = "news";
+
 async function loadContentData() {
   const result: {
     entries: ContentEntry[];
@@ -65,10 +131,6 @@ async function loadContentData() {
       error: getAdminLoadError(error, "Content entries could not be loaded."),
     };
   }
-}
-
-function isMediaEntry(entry: ContentEntry) {
-  return entry.kind === "audio" || entry.kind === "video_reel";
 }
 
 function getMediaAccept(kind: ContentKind) {
@@ -95,16 +157,27 @@ function getUploadLabel(kind: ContentKind) {
   return "Replace uploaded file";
 }
 
-function getContentCounts(entries: ContentEntry[]) {
-  return {
-    announcements: entries.filter((entry) => entry.kind === "announcement").length,
-    gallery: entries.filter((entry) => entry.kind === "gallery_photo").length,
-    media: entries.filter(isMediaEntry).length,
-    published: entries.filter((entry) => entry.isPublished).length,
-    written: entries.filter(
-      (entry) => entry.kind === "blog" || entry.kind === "news",
-    ).length,
-  };
+function getContentManagerHref(kind: ContentKind) {
+  return `/admin/content?kind=${kind}`;
+}
+
+function isManagedContentKind(kind: string): kind is ContentKind {
+  return CONTENT_MANAGER_SECTIONS.some((section) => section.kind === kind);
+}
+
+function getSelectedContentKind(kind?: string) {
+  return kind && isManagedContentKind(kind) ? kind : DEFAULT_CONTENT_KIND;
+}
+
+function getContentManagerSection(kind: ContentKind) {
+  return (
+    CONTENT_MANAGER_SECTIONS.find((section) => section.kind === kind) ||
+    CONTENT_MANAGER_SECTIONS[0]
+  );
+}
+
+function getKindCount(entries: ContentEntry[], kind: ContentKind) {
+  return entries.filter((entry) => entry.kind === kind).length;
 }
 
 function ContentEntryCard({ entry }: { entry: ContentEntry }) {
@@ -219,6 +292,7 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
           >
             <input name="intent" type="hidden" value="update" />
             <input name="id" type="hidden" value={entry.id} />
+            <input name="kind" type="hidden" value={entry.kind} />
 
             <div className="admin-edit-form-grid">
               <label>
@@ -293,7 +367,11 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
           </form>
         </details>
 
-        <AdminDeleteContentForm id={entry.id} title={entry.title} />
+        <AdminDeleteContentForm
+          id={entry.id}
+          kind={entry.kind}
+          title={entry.title}
+        />
       </div>
     </article>
   );
@@ -307,42 +385,39 @@ export default async function AdminContentPage({
   const session = await requireAdminSession();
   const params = await searchParams;
   const content = await loadContentData();
-  const counts = getContentCounts(content.entries);
+  const selectedKind = getSelectedContentKind(params.kind);
+  const selectedSection = getContentManagerSection(selectedKind);
+  const selectedEntries = content.entries.filter(
+    (entry) => entry.kind === selectedKind,
+  );
 
   return (
     <AdminChrome
-      description="Edit or delete saved news, blogs, announcements, leadership profiles, gallery photos, audio, and video reels."
+      description="Edit or delete saved news, blogs, announcements, leadership profiles, gallery photos, audio, video reels, and activities."
       error={content.error}
       session={session}
       statusMessage={getAdminStatusMessage(params.status)}
       title="Manage content"
     >
-      <section className="admin-stat-grid">
-        <article>
-          <span>Published</span>
-          <strong>{counts.published}</strong>
-          <p>Entries currently visible on public pages.</p>
-        </article>
-        <article>
-          <span>News and blogs</span>
-          <strong>{counts.written}</strong>
-          <p>Written updates available in archive pages.</p>
-        </article>
-        <article>
-          <span>Announcements</span>
-          <strong>{counts.announcements}</strong>
-          <p>Public notices and popup announcement source.</p>
-        </article>
-        <article>
-          <span>Media</span>
-          <strong>{counts.media}</strong>
-          <p>Audio messages and video reels stored online.</p>
-        </article>
-        <article>
-          <span>Gallery</span>
-          <strong>{counts.gallery}</strong>
-          <p>Public photo gallery images stored online.</p>
-        </article>
+      <section className="admin-content-type-grid" aria-label="Content types">
+        {CONTENT_MANAGER_SECTIONS.map((section) => {
+          const isActive = section.kind === selectedKind;
+
+          return (
+            <Link
+              aria-current={isActive ? "page" : undefined}
+              className={`admin-content-type-card${
+                isActive ? " is-active" : ""
+              }`}
+              href={getContentManagerHref(section.kind)}
+              key={section.kind}
+            >
+              <span>{CONTENT_KIND_LABELS[section.kind]}</span>
+              <strong>{getKindCount(content.entries, section.kind)}</strong>
+              <p>{section.summary}</p>
+            </Link>
+          );
+        })}
       </section>
 
       <section className="admin-panel">
@@ -350,26 +425,40 @@ export default async function AdminContentPage({
           <div className="admin-heading-with-icon">
             <FileText aria-hidden="true" size={20} />
             <div>
-              <p>Saved entries</p>
-              <h2>Edit or delete public content</h2>
+              <p>{CONTENT_KIND_LABELS[selectedKind]}</p>
+              <h2>Edit or delete {selectedSection.managerTitle}</h2>
               <span>
-                New uploads stay unchanged unless you choose a replacement file.
+                {selectedSection.summary} New uploads stay unchanged unless you
+                choose a replacement file.
               </span>
             </div>
           </div>
-          <span className="admin-count-pill">
-            {content.entries.length} total
-          </span>
+          <div className="admin-content-heading-actions">
+            <span className="admin-count-pill">
+              {selectedEntries.length} total
+            </span>
+            {selectedSection.createLabel && selectedSection.createHref && (
+              <Link
+                className="secondary-button dark-button"
+                href={selectedSection.createHref}
+              >
+                <PlusCircle aria-hidden="true" size={17} />
+                {selectedSection.createLabel}
+              </Link>
+            )}
+          </div>
         </div>
 
-        {content.entries.length > 0 ? (
+        {selectedEntries.length > 0 ? (
           <div className="admin-content-list">
-            {content.entries.map((entry) => (
+            {selectedEntries.map((entry) => (
               <ContentEntryCard entry={entry} key={entry.id} />
             ))}
           </div>
         ) : (
-          <p className="admin-empty-state">No content entries are stored yet.</p>
+          <p className="admin-empty-state">
+            No {selectedSection.managerTitle} are stored yet.
+          </p>
         )}
       </section>
     </AdminChrome>

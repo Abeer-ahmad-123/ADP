@@ -49,8 +49,20 @@ const FIELD_COPY: Record<
   },
 };
 
-export default function AdminPublishForm() {
-  const [kind, setKind] = useState<PublishContentKind>("news");
+function getInitialKind(kind?: string): PublishContentKind {
+  return CONTENT_KIND_OPTIONS.some((option) => option.value === kind)
+    ? (kind as PublishContentKind)
+    : "news";
+}
+
+export default function AdminPublishForm({
+  initialKind,
+}: {
+  initialKind?: string;
+}) {
+  const [kind, setKind] = useState<PublishContentKind>(() =>
+    getInitialKind(initialKind),
+  );
   const copy = FIELD_COPY[kind];
   const requiresBody = kind === "blog";
   const requiresRole = kind === "leadership_profile";

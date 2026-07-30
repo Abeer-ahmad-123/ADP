@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  Edit3,
   ExternalLink,
   Film,
   Headphones,
@@ -90,6 +91,8 @@ function AdminMediaSection({
   title: string;
 }) {
   const Icon = kind === "audio" ? Headphones : Film;
+  const contentKind = kind === "audio" ? "audio" : "video_reel";
+  const managerHref = `/admin/content?kind=${contentKind}`;
 
   return (
     <section className="admin-panel">
@@ -145,6 +148,13 @@ function AdminMediaSection({
                     <ExternalLink aria-hidden="true" size={15} />
                   </a>
                 )}
+                <Link
+                  className="admin-file-link"
+                  href={`${managerHref}#entry-${entry.id}`}
+                >
+                  Manage entry
+                  <Edit3 aria-hidden="true" size={15} />
+                </Link>
               </div>
             </article>
           ))}
@@ -187,9 +197,22 @@ export default async function AdminMediaPage({
             files from the content manager.
           </span>
         </div>
-        <Link className="secondary-button dark-button" href="/admin/content">
-          Open content manager
-        </Link>
+        <div className="admin-panel-actions">
+          <Link
+            className="secondary-button dark-button"
+            href="/admin/content?kind=audio"
+          >
+            <Headphones aria-hidden="true" size={17} />
+            Manage audio
+          </Link>
+          <Link
+            className="secondary-button dark-button"
+            href="/admin/content?kind=video_reel"
+          >
+            <Film aria-hidden="true" size={17} />
+            Manage videos
+          </Link>
+        </div>
       </section>
 
       <section className="admin-stat-grid admin-media-stats">
