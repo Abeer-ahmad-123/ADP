@@ -2,13 +2,19 @@
 
 import Image from "next/image";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
 import {
-  AGENDA_ITEMS,
+  Banknote,
+  CheckCircle2,
+  Landmark,
+  MapPinned,
+  ShieldCheck,
+} from "lucide-react";
+import {
   PARTY_LOGO_SRC,
   PARTY_SHORT_NAME,
   TIMELINE_ITEMS,
 } from "@/data/partyContent";
+import type { ElectionPlatformItem } from "@/types/party";
 
 const CARD_LAUNCH_VECTORS = [
   { x: "52%", y: "126px" },
@@ -17,7 +23,13 @@ const CARD_LAUNCH_VECTORS = [
   { x: "-52%", y: "-126px" },
 ];
 
-export default function AgendaSection() {
+const AGENDA_ICONS = [Landmark, ShieldCheck, Banknote, MapPinned];
+
+export default function AgendaSection({
+  items,
+}: {
+  items: ElectionPlatformItem[];
+}) {
   const [isActive, setIsActive] = useState(false);
   const isReadyToAnimateFromTopRef = useRef(true);
   const restartFrameRef = useRef<number | null>(null);
@@ -134,7 +146,8 @@ export default function AgendaSection() {
           </div>
 
           <div className="agenda-grid agenda-launch-grid">
-            {AGENDA_ITEMS.map(({ Icon, ...item }, index) => {
+            {items.map((item, index) => {
+              const Icon = AGENDA_ICONS[index] ?? AGENDA_ICONS[0];
               const vector =
                 CARD_LAUNCH_VECTORS[index] ?? CARD_LAUNCH_VECTORS[0];
               const cardStyle = {
@@ -146,7 +159,7 @@ export default function AgendaSection() {
               return (
                 <article
                   className="agenda-card agenda-launch-card"
-                  key={item.title}
+                  key={`${item.area}-${item.title}`}
                   style={cardStyle}
                 >
                   <div className="card-icon">

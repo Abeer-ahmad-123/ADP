@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminManifestoPanel from "@/app/admin/_components/AdminManifestoPanel";
-import { MANIFESTO_POINTS } from "@/data/partyContent";
+import { AGENDA_ITEMS, MANIFESTO_POINTS } from "@/data/partyContent";
 import { getManifestoDocument } from "@/lib/manifestoRepository";
 import {
   type AdminSearchParams,
@@ -26,6 +26,11 @@ async function loadManifestoData() {
     return {
       error: getAdminLoadError(error, "Manifesto data could not be loaded."),
       manifesto: {
+        electionPlatform: AGENDA_ITEMS.map((item) => ({
+          area: item.area,
+          copy: item.copy,
+          title: item.title,
+        })),
         homePoints: MANIFESTO_POINTS,
         pdfHref: "",
         summary: "",

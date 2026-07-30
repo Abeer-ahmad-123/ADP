@@ -1,8 +1,14 @@
 import AgendaSection from "@/components/AgendaSection";
-import { getManifestoHomePoints } from "@/lib/manifestoRepository";
+import {
+  getManifestoElectionPlatform,
+  getManifestoHomePoints,
+} from "@/lib/manifestoRepository";
 
 export default async function ManifestoSection() {
-  const manifestoPoints = await getManifestoHomePoints();
+  const [manifestoPoints, electionPlatform] = await Promise.all([
+    getManifestoHomePoints(),
+    getManifestoElectionPlatform(),
+  ]);
 
   return (
     <>
@@ -33,7 +39,7 @@ export default async function ManifestoSection() {
         </div>
       </section>
 
-      <AgendaSection />
+      <AgendaSection items={electionPlatform} />
     </>
   );
 }

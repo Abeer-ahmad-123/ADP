@@ -1,4 +1,4 @@
-import type { ManifestoPoint } from "@/types/party";
+import type { ElectionPlatformItem, ManifestoPoint } from "@/types/party";
 import { normalizeExtractedPdfText } from "@/lib/pdfText";
 
 const DEFAULT_MANIFESTO_THEME = "Political Pragmatism in Pakistan";
@@ -342,4 +342,41 @@ export function createManifestoHomeHighlights(text: string, count = 4): Manifest
       title: pillar.title,
     }))
     .filter((point) => point.copy);
+}
+
+function getPlatformArea(pillar: ManifestoPillar) {
+  const shortTitle = pillar.title
+    .replace(/\b(reform|empowerment|development|policy)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return `Pillar ${pillar.number} - ${shortTitle || pillar.title}`;
+}
+
+export function createElectionPlatformHighlights(
+  text: string,
+  count = 4,
+): ElectionPlatformItem[] {
+  const parsed = parseManifestoText(text);
+  const homeTitles = new Set(
+    createManifestoHomeHighlights(text, count).map((point) =>
+      point.title.toLowerCase(),
+    ),
+  );
+  const distinctPillars = parsed.pillars.filter(
+    (pillar) =>
+      pillar.title.trim() && !homeTitles.has(pillar.title.toLowerCase()),
+  );
+  const fallbackPillars = parsed.pillars.filter((pillar) => pillar.title.trim());
+  const selectedPillars =
+    distinctPillars.length >= count ? distinctPillars : fallbackPillars;
+
+  return selectedPillars
+    .slice(0, count)
+    .map((pillar) => ({
+      area: getPlatformArea(pillar),
+      copy: getPillarHighlightCopy(pillar),
+      title: pillar.title,
+    }))
+    .filter((item) => item.copy);
 }

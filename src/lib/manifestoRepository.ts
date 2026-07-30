@@ -1,12 +1,16 @@
 import type { QueryResultRow } from "pg";
-import { MANIFESTO_POINTS } from "@/data/partyContent";
-import { createManifestoHomeHighlights } from "@/lib/manifestoParser";
+import { AGENDA_ITEMS, MANIFESTO_POINTS } from "@/data/partyContent";
+import {
+  createElectionPlatformHighlights,
+  createManifestoHomeHighlights,
+} from "@/lib/manifestoParser";
 import { tryExtractPdfTextFromPublicHref } from "@/lib/pdfText";
 import { getPool } from "@/lib/postgres";
 import { setSetting } from "@/lib/siteSettings";
-import type { ManifestoPoint } from "@/types/party";
+import type { ElectionPlatformItem, ManifestoPoint } from "@/types/party";
 
 export const MANIFESTO_SETTING_KEYS = {
+  electionPlatform: "manifesto_election_platform",
   homePoints: "manifesto_home_points",
   pdfHref: "manifesto_pdf_href",
   summary: "manifesto_summary",
@@ -15,6 +19,7 @@ export const MANIFESTO_SETTING_KEYS = {
 } as const;
 
 export type ManifestoDocument = {
+  electionPlatform: ElectionPlatformItem[];
   homePoints: ManifestoPoint[];
   pdfHref: string;
   summary: string;
@@ -29,7 +34,14 @@ type SettingRow = QueryResultRow & {
   updated_at: Date | string;
 };
 
+const DEFAULT_ELECTION_PLATFORM = AGENDA_ITEMS.map((item) => ({
+  area: item.area,
+  copy: item.copy,
+  title: item.title,
+}));
+
 const EMPTY_MANIFESTO: ManifestoDocument = {
+  electionPlatform: DEFAULT_ELECTION_PLATFORM,
   homePoints: MANIFESTO_POINTS,
   pdfHref: "",
   summary: "",
@@ -46,6 +58,38 @@ function formatDate(value: Date | string) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function parseStoredElectionPlatform(value: string) {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .map((item) => {
+        if (typeof item !== "object" || item === null) {
+          return null;
+        }
+
+        const platformItem = item as Partial<ElectionPlatformItem>;
+        const area = String(platformItem.area || "").trim();
+        const title = String(platformItem.title || "").trim();
+        const copy = String(platformItem.copy || "").trim();
+
+        return area && title && copy ? { area, copy, title } : null;
+      })
+      .filter((item): item is ElectionPlatformItem => Boolean(item))
+      .slice(0, 4);
+  } catch {
+    return [];
+  }
 }
 
 function parseStoredHomePoints(value: string) {
@@ -91,8 +135,25 @@ function serializeHomePoints(points: ManifestoPoint[]) {
   );
 }
 
+function serializeElectionPlatform(items: ElectionPlatformItem[]) {
+  return JSON.stringify(
+    items
+      .map((item) => ({
+        area: item.area.trim(),
+        copy: item.copy.trim(),
+        title: item.title.trim(),
+      }))
+      .filter((item) => item.area && item.title && item.copy)
+      .slice(0, 4),
+  );
+}
+
 function getGeneratedHomePoints(text: string) {
   return text ? createManifestoHomeHighlights(text) : [];
+}
+
+function getGeneratedElectionPlatform(text: string) {
+  return text ? createElectionPlatformHighlights(text) : [];
 }
 
 export async function getManifestoDocument(): Promise<ManifestoDocument> {
@@ -123,14 +184,27 @@ export async function getManifestoDocument(): Promise<ManifestoDocument> {
     const storedHomePoints = parseStoredHomePoints(
       settings.get(MANIFESTO_SETTING_KEYS.homePoints)?.value || "",
     );
+    const storedElectionPlatform = parseStoredElectionPlatform(
+      settings.get(MANIFESTO_SETTING_KEYS.electionPlatform)?.value || "",
+    );
     const generatedHomePoints =
       storedHomePoints.length > 0 ? [] : getGeneratedHomePoints(resolvedText);
+    const generatedElectionPlatform =
+      storedElectionPlatform.length > 0
+        ? []
+        : getGeneratedElectionPlatform(resolvedText);
     const homePoints =
       storedHomePoints.length > 0
         ? storedHomePoints
         : generatedHomePoints.length > 0
         ? generatedHomePoints
         : MANIFESTO_POINTS;
+    const electionPlatform =
+      storedElectionPlatform.length > 0
+        ? storedElectionPlatform
+        : generatedElectionPlatform.length > 0
+        ? generatedElectionPlatform
+        : DEFAULT_ELECTION_PLATFORM;
 
     if (storedHomePoints.length === 0 && generatedHomePoints.length > 0) {
       await setSetting(
@@ -139,7 +213,18 @@ export async function getManifestoDocument(): Promise<ManifestoDocument> {
       );
     }
 
+    if (
+      storedElectionPlatform.length === 0 &&
+      generatedElectionPlatform.length > 0
+    ) {
+      await setSetting(
+        MANIFESTO_SETTING_KEYS.electionPlatform,
+        serializeElectionPlatform(generatedElectionPlatform),
+      );
+    }
+
     return {
+      electionPlatform,
       homePoints,
       pdfHref,
       summary: settings.get(MANIFESTO_SETTING_KEYS.summary)?.value || "",
@@ -150,6 +235,47 @@ export async function getManifestoDocument(): Promise<ManifestoDocument> {
   } catch {
     return EMPTY_MANIFESTO;
   }
+}
+
+export async function getManifestoElectionPlatform(): Promise<
+  ElectionPlatformItem[]
+> {
+  try {
+    const pool = getPool();
+    const result = await pool.query<SettingRow>(
+      `
+        select key, value, updated_at
+        from site_settings
+        where key = any($1::text[])
+      `,
+      [[MANIFESTO_SETTING_KEYS.electionPlatform, MANIFESTO_SETTING_KEYS.text]],
+    );
+    const settings = new Map(result.rows.map((row) => [row.key, row]));
+    const storedElectionPlatform = parseStoredElectionPlatform(
+      settings.get(MANIFESTO_SETTING_KEYS.electionPlatform)?.value || "",
+    );
+
+    if (storedElectionPlatform.length > 0) {
+      return storedElectionPlatform;
+    }
+
+    const generatedElectionPlatform = getGeneratedElectionPlatform(
+      settings.get(MANIFESTO_SETTING_KEYS.text)?.value || "",
+    );
+
+    if (generatedElectionPlatform.length > 0) {
+      await setSetting(
+        MANIFESTO_SETTING_KEYS.electionPlatform,
+        serializeElectionPlatform(generatedElectionPlatform),
+      );
+
+      return generatedElectionPlatform;
+    }
+  } catch {
+    return DEFAULT_ELECTION_PLATFORM;
+  }
+
+  return DEFAULT_ELECTION_PLATFORM;
 }
 
 export async function getManifestoHomePoints(): Promise<ManifestoPoint[]> {
@@ -192,12 +318,14 @@ export async function getManifestoHomePoints(): Promise<ManifestoPoint[]> {
 }
 
 export async function setManifestoDocument({
+  electionPlatform,
   homePoints,
   pdfHref,
   summary,
   text,
   title,
 }: {
+  electionPlatform?: ElectionPlatformItem[];
   homePoints?: ManifestoPoint[];
   pdfHref?: string;
   summary: string;
@@ -220,11 +348,21 @@ export async function setManifestoDocument({
       homePoints && homePoints.length > 0
         ? homePoints
         : getGeneratedHomePoints(text);
+    const nextElectionPlatform =
+      electionPlatform && electionPlatform.length > 0
+        ? electionPlatform
+        : getGeneratedElectionPlatform(text);
 
     updates.push(
       setSetting(
         MANIFESTO_SETTING_KEYS.homePoints,
         serializeHomePoints(nextHomePoints),
+      ),
+    );
+    updates.push(
+      setSetting(
+        MANIFESTO_SETTING_KEYS.electionPlatform,
+        serializeElectionPlatform(nextElectionPlatform),
       ),
     );
   }

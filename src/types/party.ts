@@ -11,16 +11,19 @@ export type ManifestoPoint = {
   copy: string;
 };
 
+export type ElectionPlatformItem = {
+  title: string;
+  area: string;
+  copy: string;
+};
+
 export type ApproachPoint = {
   number: string;
   title: string;
   copy: string;
 };
 
-export type AgendaItem = {
-  title: string;
-  area: string;
-  copy: string;
+export type AgendaItem = ElectionPlatformItem & {
   Icon: LucideIcon;
 };
 
