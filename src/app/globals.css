@@ -1672,16 +1672,17 @@ a {
   display: inline-flex;
   font-size: 22px;
   font-weight: 950;
-  height: 70px;
+  height: 170px;
   justify-content: center;
   margin-bottom: 22px;
   overflow: hidden;
   position: relative;
-  width: 70px;
+  width: 170px;
 }
 
 .profile-avatar img {
   object-fit: cover;
+  object-position: top;
 }
 
 .gallery-photo-card {
@@ -1704,7 +1705,7 @@ a {
 }
 
 .gallery-photo-frame {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 6 / 6;
   background:
     radial-gradient(circle at 80% 10%, rgba(216, 162, 53, 0.2), transparent 32%),
     linear-gradient(145deg, #072219, #0f6047);
@@ -1713,7 +1714,8 @@ a {
 }
 
 .gallery-photo-frame img {
-  object-fit: contain;
+  object-fit: cover;
+  object-position: top;
   transition: transform 420ms ease;
 }
 
