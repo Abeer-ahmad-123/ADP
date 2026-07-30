@@ -110,11 +110,12 @@ export default function AgendaSection() {
     >
       <div className="section-inner agenda-launch-inner">
         <div className="section-heading centered agenda-title-stage">
-          <p className="eyebrow">Election-ready sections</p>
-          <h2>What this website should show beyond the hero.</h2>
+          <p className="eyebrow">Election platform</p>
+          <h2>From manifesto pillars to public delivery.</h2>
           <p>
-            A political website needs policy depth, trust signals, local action,
-            and regular reporting, not just a campaign slogan.
+            These priorities come from the party manifesto and give voters a
+            clear view of what Awam Dost Party will organize, campaign on, and
+            measure after election day.
           </p>
         </div>
 

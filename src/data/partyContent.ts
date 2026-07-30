@@ -2,14 +2,12 @@ import {
   Banknote,
   BookOpenText,
   CalendarDays,
-  GraduationCap,
   Handshake,
   Landmark,
   MapPinned,
   Megaphone,
   Newspaper,
   ShieldCheck,
-  Sprout,
   UsersRound,
 } from "lucide-react";
 import type {
@@ -71,37 +69,37 @@ export const APPROACH_POINTS: ApproachPoint[] = [
 
 export const AGENDA_ITEMS: AgendaItem[] = [
   {
-    title: "Public Service Dashboard",
-    area: "Governance",
-    copy: "A citizen-facing tracker for promises, budgets, timelines, and responsible officials.",
+    title: "Reform state institutions",
+    area: "Pillar 1 - State reform",
+    copy: "Depoliticize civil-military coordination, judicial appointments, policing, bureaucracy, and public institutions so service comes before patronage.",
     Icon: Landmark,
   },
   {
-    title: "Youth Skill Mission",
-    area: "Employment",
-    copy: "District skill labs for AI literacy, trades, freelancing, agriculture tech, and small business operations.",
-    Icon: GraduationCap,
+    title: "Zero tolerance for corruption",
+    area: "Pillar 2 - Accountability",
+    copy: "Investigate, prosecute, and recover public money across all offices with transparent rules and no political exceptions.",
+    Icon: ShieldCheck,
   },
   {
-    title: "Green Mohalla Program",
-    area: "Climate",
-    copy: "Clean water points, shaded streets, recycling pilots, and flood-readiness teams at union council level.",
-    Icon: Sprout,
+    title: "Self-reliant economy",
+    area: "Pillar 3 - Economy",
+    copy: "Boost local production, exports, small industry, agriculture, and investment while discouraging luxury import dependence.",
+    Icon: Banknote,
   },
-  // {
-  //   title: "Transparent Funding",
-  //   area: "Trust",
-  //   copy: "Monthly public donation summaries, audited campaign spending, and conflict-of-interest disclosures.",
-  //   Icon: ShieldCheck,
-  // },
+  {
+    title: "Empowered local government",
+    area: "Pillar 4 - Local delivery",
+    copy: "Move health units, schools, dispute resolution, municipal services, and small-cause justice closer to citizens.",
+    Icon: MapPinned,
+  },
 ];
 
 export const TIMELINE_ITEMS = [
-  "100-day public service scorecard",
-  "District manifesto town halls",
-  "Women and youth candidate incubator",
-  "Small business licensing desk",
-  "Overseas Pakistani listening forum",
+  "Institutional reform scorecard",
+  "Anti-corruption recovery tracker",
+  "Local production and export plan",
+  "Union Council service map",
+  "Candidate and manifesto town halls",
 ];
 
 export const PROVINCES = [
