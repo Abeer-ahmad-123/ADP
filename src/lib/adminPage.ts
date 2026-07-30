@@ -12,6 +12,7 @@ export const ADMIN_STATUS_MESSAGES: Record<string, string> = {
   "book-manage-error": "Book could not be updated.",
   "book-manage-invalid": "Please complete the required book fields.",
   "book-manage-missing": "That book could not be found.",
+  "book-pages-regenerated": "Book reader pages regenerated successfully.",
   "book-updated": "Book updated successfully.",
   "content-created": "Content entry created successfully.",
   "content-deleted": "Content entry deleted successfully.",

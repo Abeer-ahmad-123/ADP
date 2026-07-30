@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Edit3, FileUp } from "lucide-react";
+import { Edit3, FileUp, RefreshCw } from "lucide-react";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminBookUploadForm from "@/components/AdminBookUploadForm";
 import AdminDeleteBookForm from "@/components/AdminDeleteBookForm";
@@ -112,7 +112,7 @@ export default async function AdminBooksPage({
                     <span>{book.subtitle}</span>
                   </td>
                   <td>{book.author || "—"}</td>
-                  <td>{book.pageCount || (book.pdfHref ? "PDF" : 0)}</td>
+                  <td>{book.pageCount}</td>
                   <td>
                     <span
                       className={
@@ -190,6 +190,20 @@ export default async function AdminBooksPage({
                           </button>
                         </form>
                       </details>
+                      {book.pdfHref && (
+                        <form action="/api/admin/book/manage" method="post">
+                          <input name="intent" type="hidden" value="regenerate" />
+                          <input name="id" type="hidden" value={book.id} />
+                          <button
+                            aria-label={`Regenerate pages for ${book.title}`}
+                            className="regenerate-button"
+                            title="Regenerate pages"
+                            type="submit"
+                          >
+                            <RefreshCw aria-hidden="true" size={16} />
+                          </button>
+                        </form>
+                      )}
                       <AdminDeleteBookForm id={book.id} title={book.title} />
                     </div>
                   </td>

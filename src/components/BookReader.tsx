@@ -15,7 +15,6 @@ type BookReaderProps = {
   compact?: boolean;
   pages: BookSpread[];
   partyName: string;
-  pdfHref?: string;
   title: string;
 };
 
@@ -93,19 +92,10 @@ function renderTurningPage(page: BookSpread, className: string, bookTitle: strin
   return renderBookPage(page, `turning-paper ${className}`, bookTitle, true);
 }
 
-function getPdfViewerHref(pdfHref: string) {
-  if (pdfHref.includes("#")) {
-    return pdfHref;
-  }
-
-  return `${pdfHref}#view=FitH`;
-}
-
 export default function BookReader({
   compact = false,
   pages,
   partyName,
-  pdfHref = "",
   title,
 }: BookReaderProps) {
   const [pageIndex, setPageIndex] = useState(0);
@@ -113,7 +103,6 @@ export default function BookReader({
   const isMobileBook = useMediaQuery("(max-width: 700px)");
   const pageStep = isMobileBook ? 1 : 2;
   const hasPages = pages.length > 0;
-  const hasPdfFallback = !hasPages && Boolean(pdfHref);
   const maxStartIndex = useMemo(() => {
     if (pages.length <= 1) {
       return 0;
@@ -156,15 +145,12 @@ export default function BookReader({
 
   const spreadLabel = useMemo(
     () =>
-      hasPdfFallback
-        ? "PDF"
-        : !hasPages
+      !hasPages
         ? "No pages"
         : isMobileBook
         ? `Page ${targetMobilePage.pageNumber}`
         : `Pages ${targetLeftPage.pageNumber}-${targetRightPage.pageNumber}`,
     [
-      hasPdfFallback,
       hasPages,
       isMobileBook,
       targetLeftPage?.pageNumber,
@@ -281,16 +267,6 @@ export default function BookReader({
               </div>
             </div>
           )}
-        </div>
-      ) : hasPdfFallback ? (
-        <div className="book-pdf-fallback">
-          <iframe
-            src={getPdfViewerHref(pdfHref)}
-            title={`${bookTitle} PDF`}
-          />
-          <a href={pdfHref} target="_blank" rel="noreferrer">
-            Open PDF
-          </a>
         </div>
       ) : (
         <div className="book-empty">

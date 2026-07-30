@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ["@napi-rs/canvas", "pdf-to-png-converter"],
   async headers() {
     return [
       {

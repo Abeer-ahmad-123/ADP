@@ -45,28 +45,6 @@ function isFilledFile(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.size > 0;
 }
 
-async function tryGenerateBookPages({
-  bookId,
-  pdfHref,
-  title,
-}: {
-  bookId: number;
-  pdfHref: string;
-  title: string;
-}) {
-  try {
-    return await generateBookPagesFromPdf({
-      bookId,
-      pdfHref,
-      title,
-    });
-  } catch (error) {
-    console.warn("Book PDF was saved without generated reader pages.", error);
-
-    return [];
-  }
-}
-
 async function updateBookEntry(request: Request, formData: FormData) {
   const id = readBookId(formData);
 
@@ -97,7 +75,7 @@ async function updateBookEntry(request: Request, formData: FormData) {
   if (isFilledFile(pdfFile)) {
     uploadedPdfHref = await saveBookPdfUpload(pdfFile);
     pdfHref = uploadedPdfHref;
-    generatedPages = await tryGenerateBookPages({
+    generatedPages = await generateBookPagesFromPdf({
       bookId: id,
       pdfHref,
       title,
@@ -128,6 +106,34 @@ async function updateBookEntry(request: Request, formData: FormData) {
   }
 
   return redirectToAdmin(request, "book-updated", id);
+}
+
+async function regenerateBookEntry(request: Request, formData: FormData) {
+  const id = readBookId(formData);
+
+  if (!id) {
+    return redirectToAdmin(request, "book-manage-invalid");
+  }
+
+  const existing = await getBookById(id);
+
+  if (!existing) {
+    return redirectToAdmin(request, "book-manage-missing");
+  }
+
+  if (!existing.pdfHref) {
+    return redirectToAdmin(request, "book-manage-invalid", id);
+  }
+
+  const pages = await generateBookPagesFromPdf({
+    bookId: id,
+    pdfHref: existing.pdfHref,
+    title: existing.title,
+  });
+
+  await replaceBookPages(id, pages);
+
+  return redirectToAdmin(request, "book-pages-regenerated", id);
 }
 
 async function deleteBookEntry(request: Request, formData: FormData) {
@@ -173,6 +179,10 @@ export async function POST(request: Request) {
 
     if (intent === "delete") {
       return await deleteBookEntry(request, formData);
+    }
+
+    if (intent === "regenerate") {
+      return await regenerateBookEntry(request, formData);
     }
 
     return redirectToAdmin(request, "book-manage-invalid");

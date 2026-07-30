@@ -1,14 +1,22 @@
-import { execFile } from "child_process";
-import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "fs/promises";
+import { mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
-import { promisify } from "util";
 import { del, list, put } from "@vercel/blob";
+import {
+  pdfToPng,
+  VerbosityLevel,
+} from "pdf-to-png-converter";
 import type { BookSpread } from "@/types/party";
 
-const execFileAsync = promisify(execFile);
-const PDF_TOOL_MAX_BUFFER = 8 * 1024 * 1024;
-const PAGE_RENDER_DPI = "144";
+const PAGE_RENDER_SCALE = 2;
+
+const PDF_RENDER_OPTIONS = {
+  disableFontFace: false,
+  returnPageContent: true,
+  useSystemFonts: false,
+  verbosityLevel: VerbosityLevel.ERRORS,
+  viewportScale: PAGE_RENDER_SCALE,
+} as const;
 
 function resolvePublicUploadFile(href: string) {
   if (!href.startsWith("/uploads/")) {
@@ -154,15 +162,15 @@ async function deleteStaleBlobPageImages(
 
 async function uploadGeneratedBookPageImage({
   bookId,
-  imagePath,
+  imageBuffer,
   paddedPageNumber,
 }: {
   bookId: number;
-  imagePath: string;
+  imageBuffer: Buffer;
   paddedPageNumber: string;
 }) {
   const pathname = getBookPageBlobPathname(bookId, paddedPageNumber);
-  const blob = await put(pathname, await readFile(imagePath), {
+  const blob = await put(pathname, imageBuffer, {
     access: "public",
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -175,19 +183,32 @@ async function uploadGeneratedBookPageImage({
   };
 }
 
-async function getPdfPageCount(pdfPath: string) {
-  const { stdout } = await execFileAsync("pdfinfo", [pdfPath], {
-    encoding: "utf8",
-    maxBuffer: PDF_TOOL_MAX_BUFFER,
+async function getPdfPagesMetadata(pdfPath: string) {
+  const pages = await pdfToPng(pdfPath, {
+    ...PDF_RENDER_OPTIONS,
+    returnMetadataOnly: true,
+    returnPageContent: false,
   });
-  const match = stdout.match(/^Pages:\s+(\d+)\s*$/m);
-  const pageCount = match ? Number(match[1]) : 0;
 
-  if (!Number.isInteger(pageCount) || pageCount <= 0) {
+  if (pages.length <= 0) {
     throw new Error("Uploaded PDF has no readable pages.");
   }
 
-  return pageCount;
+  return pages;
+}
+
+async function renderPdfPage(pdfPath: string, pageNumber: number) {
+  const pages = await pdfToPng(pdfPath, {
+    ...PDF_RENDER_OPTIONS,
+    pagesToProcess: [pageNumber],
+  });
+  const renderedPage = pages[0];
+
+  if (!renderedPage?.content) {
+    throw new Error(`Uploaded PDF page ${pageNumber} could not be rendered.`);
+  }
+
+  return renderedPage.content;
 }
 
 async function replaceGeneratedDirectory({
@@ -257,41 +278,29 @@ export async function generateBookPagesFromPdf({
   await mkdir(temporaryDirectory, { recursive: true });
 
   try {
-    const pageCount = await getPdfPageCount(preparedPdf.pdfPath);
+    const metadataPages = await getPdfPagesMetadata(preparedPdf.pdfPath);
     const pages: BookSpread[] = [];
     const currentBlobPathnames = new Set<string>();
 
-    for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+    for (const pageMetadata of metadataPages) {
+      const pageNumber = pageMetadata.pageNumber;
       const paddedPageNumber = String(pageNumber).padStart(3, "0");
-      const outputBase = path.join(temporaryDirectory, `page-${paddedPageNumber}`);
-
-      await execFileAsync(
-        "pdftoppm",
-        [
-          "-png",
-          "-r",
-          PAGE_RENDER_DPI,
-          "-f",
-          String(pageNumber),
-          "-l",
-          String(pageNumber),
-          "-singlefile",
-          preparedPdf.pdfPath,
-          outputBase,
-        ],
-        {
-          maxBuffer: PDF_TOOL_MAX_BUFFER,
-        },
+      const generatedImagePath = path.join(
+        temporaryDirectory,
+        `page-${paddedPageNumber}.png`,
       );
-
-      const generatedImagePath = `${outputBase}.png`;
+      const imageBuffer = await renderPdfPage(preparedPdf.pdfPath, pageNumber);
       const blobPage = useBlobPages
         ? await uploadGeneratedBookPageImage({
             bookId,
-            imagePath: generatedImagePath,
+            imageBuffer,
             paddedPageNumber,
           })
         : null;
+
+      if (!useBlobPages) {
+        await writeFile(generatedImagePath, imageBuffer);
+      }
 
       if (blobPage) {
         currentBlobPathnames.add(blobPage.pathname);

@@ -173,7 +173,6 @@ export default async function BookPage({ searchParams }: BookRouteProps) {
           <BookReader
             pages={book.pages}
             partyName={PARTY_NAME}
-            pdfHref={book.pdfHref}
             title={bookTitle}
           />
         </div>
