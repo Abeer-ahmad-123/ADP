@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import path from "path";
+import { pathToFileURL } from "url";
 
 const PDF_DIRECTION_CONTROLS = /[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
 
@@ -95,9 +96,17 @@ async function readPdfData(href: string) {
 }
 
 async function getPdfJs() {
-  pdfjsLib ??= (await import(
-    "pdfjs-dist/legacy/build/pdf.mjs"
-  )) as PdfJsModule;
+  if (!pdfjsLib) {
+    pdfjsLib = (await import(
+      "pdfjs-dist/legacy/build/pdf.mjs"
+    )) as PdfJsModule;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(
+      path.join(
+        process.cwd(),
+        "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+      ),
+    ).href;
+  }
 
   return pdfjsLib;
 }
