@@ -31,6 +31,20 @@ function isFilledFile(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.size > 0;
 }
 
+function isBlobPdfHref(value: string) {
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "https:" &&
+      url.hostname.endsWith(".blob.vercel-storage.com") &&
+      url.pathname.toLowerCase().endsWith(".pdf")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
   const session = getAdminSessionFromRequest(request);
 
@@ -42,15 +56,23 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const title = readText(formData, "title");
     const summary = readText(formData, "summary");
+    const uploadedBlobHref = readText(formData, "pdfHref");
 
     if (title.length < 2 || summary.length < 8) {
       return redirectToAdmin(request, "manifesto-invalid");
     }
 
+    if (uploadedBlobHref && !isBlobPdfHref(uploadedBlobHref)) {
+      return redirectToAdmin(request, "manifesto-invalid");
+    }
+
     const currentManifesto = await getManifestoDocument();
     const file = formData.get("file");
-    const hasNewFile = isFilledFile(file);
-    const nextPdfHref = hasNewFile
+    const hasUploadedBlob = Boolean(uploadedBlobHref);
+    const hasNewFile = hasUploadedBlob || isFilledFile(file);
+    const nextPdfHref = hasUploadedBlob
+      ? uploadedBlobHref
+      : isFilledFile(file)
       ? await saveManifestoPdfUpload(file)
       : currentManifesto.pdfHref;
 
@@ -63,10 +85,12 @@ export async function POST(request: Request) {
     if (hasNewFile || !nextText) {
       try {
         nextText = await extractPdfTextFromPublicHref(nextPdfHref);
-      } catch {
+      } catch (error) {
         if (hasNewFile) {
           await deletePublicUpload(nextPdfHref);
         }
+
+        console.error("Manifesto text extraction failed.", error);
 
         return redirectToAdmin(request, "manifesto-text-error");
       }
@@ -92,7 +116,9 @@ export async function POST(request: Request) {
     }
 
     return redirectToAdmin(request, "manifesto-updated");
-  } catch {
+  } catch (error) {
+    console.error("Admin manifesto update failed.", error);
+
     return redirectToAdmin(request, "manifesto-error");
   }
 }

@@ -1,5 +1,11 @@
 import type { NextConfig } from "next";
 
+const PDFJS_TRACE_FILES = [
+  "./node_modules/pdfjs-dist/cmaps/**/*",
+  "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+  "./node_modules/pdfjs-dist/standard_fonts/**/*",
+];
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -13,9 +19,13 @@ const nextConfig: NextConfig = {
     "/api/admin/book/*": [
       "./node_modules/@napi-rs/canvas/**/*",
       "./node_modules/@napi-rs/canvas-linux-x64-gnu/**/*",
-      "./node_modules/pdfjs-dist/cmaps/**/*",
-      "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
-      "./node_modules/pdfjs-dist/standard_fonts/**/*",
+      ...PDFJS_TRACE_FILES,
+    ],
+    "/api/admin/manifesto": [
+      ...PDFJS_TRACE_FILES,
+    ],
+    "/api/admin/manifesto/*": [
+      ...PDFJS_TRACE_FILES,
     ],
   },
   serverExternalPackages: ["@napi-rs/canvas", "pdf-to-png-converter"],
