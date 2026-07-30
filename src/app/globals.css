@@ -5183,6 +5183,12 @@ a {
   }
 }
 
+@media (max-width: 768px) {
+  :root {
+    --page-content-gutter: 0px;
+  }
+}
+
 @media (max-width: 700px) {
   :root {
     --page-section-padding-inline: 18px;
