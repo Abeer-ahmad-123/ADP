@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminManifestoPanel from "@/app/admin/_components/AdminManifestoPanel";
+import { MANIFESTO_POINTS } from "@/data/partyContent";
 import { getManifestoDocument } from "@/lib/manifestoRepository";
 import {
   type AdminSearchParams,
@@ -25,6 +26,7 @@ async function loadManifestoData() {
     return {
       error: getAdminLoadError(error, "Manifesto data could not be loaded."),
       manifesto: {
+        homePoints: MANIFESTO_POINTS,
         pdfHref: "",
         summary: "",
         text: "",

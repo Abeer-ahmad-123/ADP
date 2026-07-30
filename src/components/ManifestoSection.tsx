@@ -1,7 +1,9 @@
 import AgendaSection from "@/components/AgendaSection";
-import { MANIFESTO_POINTS } from "@/data/partyContent";
+import { getManifestoHomePoints } from "@/lib/manifestoRepository";
 
-export default function ManifestoSection() {
+export default async function ManifestoSection() {
+  const manifestoPoints = await getManifestoHomePoints();
+
   return (
     <>
       <section id="manifesto" className="section-band manifesto-band">
@@ -17,7 +19,7 @@ export default function ManifestoSection() {
           </div>
 
           <div className="manifesto-grid">
-            {MANIFESTO_POINTS.map((point, index) => (
+            {manifestoPoints.map((point, index) => (
               <article
                 className={`manifesto-card reveal-up delay-${Math.min(index, 3)}`}
                 key={point.title}
