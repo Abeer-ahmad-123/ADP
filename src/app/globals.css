@@ -13,6 +13,10 @@
   --line: rgba(7, 24, 20, 0.13);
   --page-content-gutter: 48px;
   --page-content-max: 1360px;
+  --page-section-padding-inline: 24px;
+  --page-direct-content-gutter: calc(
+    var(--page-content-gutter) + var(--page-section-padding-inline) + var(--page-section-padding-inline)
+  );
   --shadow: 0 24px 70px rgba(8, 25, 20, 0.16);
 }
 
@@ -73,7 +77,7 @@ a {
   gap: 12px;
   grid-template-columns: minmax(170px, max-content) minmax(0, 1fr) auto;
   left: 50%;
-  max-width: min(var(--page-content-max), calc(100% - 28px));
+  max-width: min(var(--page-content-max), calc(100% - var(--page-direct-content-gutter)));
   padding: 10px 12px;
   position: fixed;
   top: 16px;
@@ -333,7 +337,7 @@ a {
   color: white;
   min-height: 100svh;
   overflow: hidden;
-  padding: 132px 24px 104px;
+  padding: 132px var(--page-section-padding-inline) 104px;
   position: relative;
 }
 
@@ -619,7 +623,7 @@ a {
 }
 
 .section-band {
-  padding: 92px 24px;
+  padding: 92px var(--page-section-padding-inline);
   scroll-margin-top: 118px;
 }
 
@@ -4910,7 +4914,7 @@ a {
     border-radius: 32px;
     gap: 10px;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    max-width: calc(100% - 24px);
+    max-width: min(var(--page-content-max), calc(100% - var(--page-direct-content-gutter)));
     padding: 8px;
   }
 
@@ -4990,7 +4994,7 @@ a {
 
   .hero-section {
     min-height: 100svh;
-    padding: 118px 18px 56px;
+    padding: 132px var(--page-section-padding-inline) 64px;
   }
 
   .hero-content {
@@ -5180,8 +5184,16 @@ a {
 }
 
 @media (max-width: 700px) {
+  :root {
+    --page-section-padding-inline: 18px;
+  }
+
   .section-band {
-    padding: 70px 18px;
+    padding: 70px var(--page-section-padding-inline);
+  }
+
+  .hero-section {
+    padding: 132px var(--page-section-padding-inline) 64px;
   }
 
   .hero-content {
