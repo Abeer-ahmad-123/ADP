@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  outputFileTracingIncludes: {
+    "/api/admin/book/*": [
+      "./node_modules/@napi-rs/canvas/**/*",
+      "./node_modules/@napi-rs/canvas-linux-x64-gnu/**/*",
+      "./node_modules/pdfjs-dist/cmaps/**/*",
+      "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+      "./node_modules/pdfjs-dist/standard_fonts/**/*",
+    ],
+  },
   serverExternalPackages: ["@napi-rs/canvas", "pdf-to-png-converter"],
   async headers() {
     return [
