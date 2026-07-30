@@ -6,7 +6,41 @@ import { usePathname } from "next/navigation";
 import { Bell, X } from "lucide-react";
 import type { PublicContentItem } from "@/types/party";
 
-const dismissedAnnouncementKeys = new Set<string>();
+const ANNOUNCEMENT_SESSION_KEY = "adp:seen-announcement";
+const seenAnnouncementKeys = new Set<string>();
+
+function hasSeenAnnouncement(announcementKey: string) {
+  if (!announcementKey) {
+    return true;
+  }
+
+  if (seenAnnouncementKeys.has(announcementKey)) {
+    return true;
+  }
+
+  try {
+    return (
+      window.sessionStorage.getItem(ANNOUNCEMENT_SESSION_KEY) ===
+      announcementKey
+    );
+  } catch {
+    return false;
+  }
+}
+
+function rememberSeenAnnouncement(announcementKey: string) {
+  if (!announcementKey) {
+    return;
+  }
+
+  seenAnnouncementKeys.add(announcementKey);
+
+  try {
+    window.sessionStorage.setItem(ANNOUNCEMENT_SESSION_KEY, announcementKey);
+  } catch {
+    // In-memory fallback still prevents repeats during this page session.
+  }
+}
 
 export default function AnnouncementPopup({
   latestAnnouncement,
@@ -18,32 +52,37 @@ export default function AnnouncementPopup({
   const isAnnouncementRoute =
     pathname === "/announcements" || pathname.startsWith("/announcements/");
   const isSuppressedRoute = isAdminRoute || isAnnouncementRoute;
+  const hasAnnouncement = Boolean(latestAnnouncement);
   const announcementKey = latestAnnouncement
-    ? `${latestAnnouncement.href}:${latestAnnouncement.title}`
+    ? `${latestAnnouncement.href}:${latestAnnouncement.meta}:${latestAnnouncement.title}`
     : "";
-  const [closedAnnouncementKey, setClosedAnnouncementKey] = useState<
-    string | null
-  >(
-    announcementKey && dismissedAnnouncementKeys.has(announcementKey)
-      ? announcementKey
-      : null,
-  );
-  const isOpen =
-    Boolean(latestAnnouncement) &&
-    !isSuppressedRoute &&
-    closedAnnouncementKey !== announcementKey &&
-    !dismissedAnnouncementKeys.has(announcementKey);
+  const [isOpen, setIsOpen] = useState(false);
 
   const closeAnnouncement = useCallback(() => {
-    if (announcementKey) {
-      dismissedAnnouncementKeys.add(announcementKey);
-    }
-
-    setClosedAnnouncementKey(announcementKey);
+    rememberSeenAnnouncement(announcementKey);
+    setIsOpen(false);
   }, [announcementKey]);
 
   useEffect(() => {
-    if (!isOpen || isSuppressedRoute) {
+    const frame = window.requestAnimationFrame(() => {
+      const shouldOpen =
+        hasAnnouncement &&
+        !isSuppressedRoute &&
+        Boolean(announcementKey) &&
+        !hasSeenAnnouncement(announcementKey);
+
+      if (shouldOpen) {
+        rememberSeenAnnouncement(announcementKey);
+      }
+
+      setIsOpen(shouldOpen);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [announcementKey, hasAnnouncement, isSuppressedRoute]);
+
+  useEffect(() => {
+    if (!isOpen) {
       return;
     }
 
@@ -56,7 +95,7 @@ export default function AnnouncementPopup({
     window.addEventListener("keydown", closeOnEscape);
 
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [closeAnnouncement, isOpen, isSuppressedRoute]);
+  }, [closeAnnouncement, isOpen]);
 
   if (isSuppressedRoute || !isOpen || !latestAnnouncement) {
     return null;
