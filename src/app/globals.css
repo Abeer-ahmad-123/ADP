@@ -5281,18 +5281,18 @@ a {
   }
 
   .hero-section {
-    padding: 132px var(--page-section-padding-inline) 64px;
+    min-height: auto;
+    padding: calc(124px + env(safe-area-inset-top, 0px)) var(--page-section-padding-inline)
+      calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
   .hero-content {
+    gap: 0;
     grid-template-columns: 1fr;
   }
 
   .hero-flag-showcase {
-    justify-self: start;
-    max-width: 280px;
-    order: -1;
-    width: min(72vw, 280px);
+    display: none;
   }
 
   .hero-content h1,
@@ -5302,23 +5302,34 @@ a {
   }
 
   .hero-statement {
-    margin-top: 22px;
+    gap: 4px;
+    margin-top: 18px;
   }
 
   .hero-statement-primary {
-    font-size: 38px;
-    line-height: 1;
+    font-size: 36px;
+    line-height: 1.08;
+    text-wrap: wrap;
   }
 
   .hero-statement-accent {
-    font-size: 33px;
-    line-height: 1;
+    font-size: 31px;
+    line-height: 1.1;
+    text-wrap: wrap;
   }
 
   .hero-statement-urdu {
-    font-size: 24px;
-    line-height: 1.58;
-    margin-top: 14px;
+    font-size: 22px;
+    line-height: 1.78;
+    margin-top: 10px;
+    text-wrap: wrap;
+  }
+
+  .hero-manifesto {
+    font-size: 16px;
+    line-height: 1.76;
+    margin-top: 22px;
+    padding-left: 14px;
   }
 
   .section-heading h2,
