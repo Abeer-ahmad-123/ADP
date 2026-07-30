@@ -113,10 +113,10 @@ export const PROVINCES = [
 ];
 
 export const SOCIAL_LINKS: SocialLink[] = [
-  { label: "Twitter", href: "https://example.com/x" },
+  { label: "Twitter", href: "https://x.com/AwamDostParty" },
   { label: "Facebook", href: "https://example.com/facebook" },
   { label: "Instagram", href: "https://example.com/instagram" },
-  { label: "YouTube", href: "https://example.com/youtube" },
+  { label: "YouTube", href: "https://www.youtube.com/@AwamDostParty-2026" },
   { label: "WhatsApp Channel", href: "https://example.com/whatsapp" },
 ];
 
