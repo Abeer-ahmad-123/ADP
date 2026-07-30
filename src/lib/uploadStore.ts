@@ -91,6 +91,10 @@ export async function saveBookPdfUpload(file: FormDataEntryValue | null) {
     maxBytes: MAX_BOOK_UPLOAD_BYTES,
   });
 
+  if (canUseVercelBlob()) {
+    return saveBlobUpload(file, "book");
+  }
+
   return savePublicUpload(file, "book");
 }
 
@@ -103,6 +107,10 @@ export async function saveManifestoPdfUpload(file: FormDataEntryValue | null) {
     file,
     maxBytes: MAX_BOOK_UPLOAD_BYTES,
   });
+
+  if (canUseVercelBlob()) {
+    return saveBlobUpload(file, "manifesto");
+  }
 
   return savePublicUpload(file, "manifesto");
 }
@@ -193,7 +201,7 @@ async function savePublicUpload(file: File, directory: string) {
 }
 
 function canUseVercelBlob() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 async function saveBlobUpload(file: File, directory: string) {
