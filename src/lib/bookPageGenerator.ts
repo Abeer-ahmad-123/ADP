@@ -11,7 +11,7 @@ import type { BookSpread } from "@/types/party";
 const PAGE_RENDER_SCALE = 2;
 
 const PDF_RENDER_OPTIONS = {
-  disableFontFace: false,
+  disableFontFace: true,
   returnPageContent: true,
   useSystemFonts: false,
   verbosityLevel: VerbosityLevel.ERRORS,
