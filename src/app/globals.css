@@ -11,6 +11,8 @@
   --rose: #b9475d;
   --blue: #133c7c;
   --line: rgba(7, 24, 20, 0.13);
+  --page-content-gutter: 48px;
+  --page-content-max: 1360px;
   --shadow: 0 24px 70px rgba(8, 25, 20, 0.16);
 }
 
@@ -71,7 +73,7 @@ a {
   gap: 12px;
   grid-template-columns: minmax(170px, max-content) minmax(0, 1fr) auto;
   left: 50%;
-  max-width: min(1180px, calc(100% - 28px));
+  max-width: min(var(--page-content-max), calc(100% - 28px));
   padding: 10px 12px;
   position: fixed;
   top: 16px;
@@ -379,7 +381,7 @@ a {
   gap: clamp(28px, 4.4vw, 62px);
   grid-template-columns: minmax(0, 860px) minmax(240px, 360px);
   margin: 0 auto;
-  max-width: min(1360px, calc(100% - 48px));
+  max-width: min(var(--page-content-max), calc(100% - var(--page-content-gutter)));
   position: relative;
   z-index: 3;
 }
@@ -623,7 +625,7 @@ a {
 
 .section-inner {
   margin: 0 auto;
-  max-width: 1180px;
+  max-width: min(var(--page-content-max), calc(100% - var(--page-content-gutter)));
   width: 100%;
 }
 
@@ -975,7 +977,7 @@ a {
 
 .manifesto-public-shell {
   margin: 0 auto;
-  max-width: 1050px;
+  max-width: min(var(--page-content-max), calc(100% - var(--page-content-gutter)));
   width: 100%;
 }
 
@@ -1289,7 +1291,7 @@ a {
   display: grid;
   gap: 58px;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 390px);
-  max-width: 1200px;
+  max-width: min(var(--page-content-max), calc(100% - var(--page-content-gutter)));
   position: relative;
   z-index: 1;
 }
@@ -1428,7 +1430,7 @@ a {
 }
 
 .book-public-reader {
-  max-width: 1500px;
+  max-width: min(var(--page-content-max), calc(100% - var(--page-content-gutter)));
 }
 
 .book-public-reader .book-shell {
@@ -3035,7 +3037,7 @@ a {
   display: flex;
   justify-content: space-between;
   margin: 0 auto;
-  max-width: 1180px;
+  max-width: min(var(--page-content-max), calc(100% - var(--page-content-gutter)));
 }
 
 .book-page-nav span {
