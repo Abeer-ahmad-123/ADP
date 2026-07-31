@@ -2595,20 +2595,21 @@ a {
 
 .membership-card {
   animation: card-breathe 5s ease-in-out infinite;
-  aspect-ratio: 319 / 380;
+  aspect-ratio: 856 / 540;
   background:
-    radial-gradient(ellipse at 18% 12%, rgba(255, 255, 255, 0.16), transparent 32%),
-    radial-gradient(ellipse at 74% 18%, rgba(216, 162, 53, 0.12), transparent 28%),
-    linear-gradient(110deg, rgba(255, 255, 255, 0.08) 0 10%, transparent 22% 36%, rgba(0, 0, 0, 0.16) 50% 58%, transparent 72%),
-    linear-gradient(146deg, #03170f 0%, #063724 46%, #02150e 100%);
+    radial-gradient(ellipse at 16% 8%, rgba(255, 255, 255, 0.16), transparent 34%),
+    radial-gradient(ellipse at 84% 18%, rgba(216, 162, 53, 0.14), transparent 30%),
+    linear-gradient(114deg, rgba(255, 255, 255, 0.08) 0 11%, transparent 24% 38%, rgba(0, 0, 0, 0.18) 52% 59%, transparent 74%),
+    linear-gradient(135deg, #03170f 0%, #063724 48%, #02150e 100%);
   border: 1px solid rgba(216, 162, 53, 0.32);
   border-radius: 8px;
   color: white;
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  gap: 18px;
+  grid-template-rows: auto auto auto 1fr;
   min-height: 0;
   overflow: hidden;
-  padding: 24px;
+  padding: 26px;
   position: relative;
 }
 
@@ -2616,7 +2617,7 @@ a {
   background:
     radial-gradient(ellipse at 28% 28%, rgba(255, 255, 255, 0.09), transparent 28%),
     radial-gradient(ellipse at 82% 68%, rgba(255, 255, 255, 0.06), transparent 24%),
-    linear-gradient(100deg, rgba(255, 255, 255, 0.08), transparent 24%, rgba(0, 0, 0, 0.16) 50%, transparent 76%);
+    linear-gradient(102deg, rgba(255, 255, 255, 0.08), transparent 24%, rgba(0, 0, 0, 0.16) 50%, transparent 76%);
   content: "";
   inset: 0;
   pointer-events: none;
@@ -2642,43 +2643,130 @@ a {
 }
 
 .card-topline {
-  align-items: center;
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  min-width: 0;
+  text-align: left;
+}
+
+.card-identity {
   display: grid;
-  justify-items: center;
-  margin-bottom: 34px;
-  text-align: center;
+  gap: 5px;
+  min-width: 0;
 }
 
 .card-party-name {
   color: white;
+  font-size: 18px;
   font-weight: 950;
-  margin-top: 14px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .card-card-type {
   color: rgba(216, 162, 53, 0.88);
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.08em;
-  margin-top: 6px;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .card-top-logo {
   background: var(--green-dark);
   border: 1px solid rgba(216, 162, 53, 0.5);
-  border-radius: 20px;
+  border-radius: 14px;
+  flex: 0 0 auto;
   display: inline-grid;
-  height: 120px;
+  height: 78px;
   overflow: hidden;
   place-items: center;
   position: relative;
-  width: 164px;
+  width: 108px;
+}
+
+.card-top-logo img {
+  object-fit: cover;
+}
+
+.card-chip-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.card-chip {
+  background:
+    linear-gradient(90deg, transparent 32%, rgba(7, 24, 20, 0.22) 32% 35%, transparent 35% 65%, rgba(7, 24, 20, 0.2) 65% 68%, transparent 68%),
+    linear-gradient(180deg, #f6d982, #c7932d);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(7, 24, 20, 0.18);
+  display: block;
+  height: 42px;
+  overflow: hidden;
+  position: relative;
+  width: 58px;
+}
+
+.card-chip::before,
+.card-chip::after,
+.card-chip span {
+  background: rgba(7, 24, 20, 0.2);
+  content: "";
+  position: absolute;
+}
+
+.card-chip::before {
+  height: 1px;
+  left: 0;
+  right: 0;
+  top: 50%;
+}
+
+.card-chip::after {
+  bottom: 0;
+  left: 50%;
+  top: 0;
+  width: 1px;
+}
+
+.card-chip span {
+  border-radius: 999px;
+  height: 20px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+}
+
+.card-validity {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.card-number-block {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.card-number-block strong {
+  color: white;
+  display: block;
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
 }
 
 .membership-card h3 {
   color: white;
-  font-size: 34px;
+  font-size: 22px;
   line-height: 1.12;
   margin: 0;
   max-width: 100%;
@@ -2688,9 +2776,9 @@ a {
 .card-grid {
   align-self: end;
   display: grid;
-  gap: 20px 18px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 34px;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.75fr) minmax(0, 1fr);
+  margin-top: 0;
   max-width: 100%;
 }
 
@@ -2703,11 +2791,14 @@ a {
 }
 
 .membership-card .card-grid div:last-child {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
 
 .membership-card .card-label {
   color: rgba(216, 162, 53, 0.9);
+  font-size: 11px;
+  line-height: 1.2;
+  margin-bottom: 5px;
 }
 
 .card-actions {
@@ -5492,31 +5583,67 @@ a {
   }
 
   .membership-card {
-    aspect-ratio: auto;
-    gap: 22px;
-    grid-template-rows: auto auto auto;
-    min-height: 560px;
-    padding: 20px;
+    aspect-ratio: 856 / 540;
+    gap: 14px;
+    grid-template-rows: auto auto auto 1fr;
+    min-height: 0;
+    padding: 18px;
   }
 
   .card-topline {
-    margin-bottom: 0;
+    gap: 12px;
+  }
+
+  .card-party-name {
+    font-size: 16px;
+  }
+
+  .card-card-type {
+    font-size: 9px;
   }
 
   .card-top-logo {
-    border-radius: 18px;
-    height: 98px;
-    width: 142px;
+    border-radius: 11px;
+    height: 58px;
+    width: 80px;
+  }
+
+  .card-chip {
+    border-radius: 7px;
+    height: 34px;
+    width: 48px;
+  }
+
+  .card-chip span {
+    height: 16px;
+    width: 25px;
+  }
+
+  .card-validity {
+    font-size: 10px;
+  }
+
+  .card-number-block {
+    gap: 5px;
+  }
+
+  .card-number-block strong {
+    font-size: 19px;
   }
 
   .membership-card h3 {
-    font-size: clamp(31px, 10vw, 42px);
+    font-size: 17px;
   }
 
   .card-grid {
-    align-self: auto;
-    gap: 16px;
+    align-self: end;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.75fr) minmax(0, 1fr);
     margin-top: 0;
+  }
+
+  .card-grid strong {
+    font-size: 12px;
   }
 
   .card-actions,
@@ -5720,6 +5847,74 @@ a {
     font-size: 34px;
   }
 
+}
+
+@media (max-width: 480px) {
+  .membership-card-panel {
+    padding: 10px;
+  }
+
+  .membership-card {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .card-topline {
+    gap: 8px;
+  }
+
+  .card-party-name {
+    font-size: 12px;
+  }
+
+  .card-card-type,
+  .card-validity {
+    font-size: 7px;
+  }
+
+  .card-top-logo {
+    border-radius: 8px;
+    height: 38px;
+    width: 54px;
+  }
+
+  .card-chip {
+    border-radius: 6px;
+    height: 26px;
+    width: 36px;
+  }
+
+  .card-chip span {
+    height: 12px;
+    width: 19px;
+  }
+
+  .card-number-block {
+    gap: 3px;
+  }
+
+  .card-number-block strong {
+    font-size: 13px;
+    line-height: 1.1;
+  }
+
+  .membership-card h3 {
+    font-size: 12px;
+  }
+
+  .membership-card .card-label {
+    font-size: 7px;
+    margin-bottom: 2px;
+  }
+
+  .card-grid {
+    gap: 7px;
+  }
+
+  .card-grid strong {
+    font-size: 9px;
+    line-height: 1.18;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

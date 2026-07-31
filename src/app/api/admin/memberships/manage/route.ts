@@ -2,6 +2,7 @@ import { getAdminSessionFromRequest } from "@/lib/adminAuth";
 import {
   deleteStoredMembership,
   getStoredMembershipByNumber,
+  isCnicUniqueViolation,
   updateStoredMembership,
   validateMembershipPayload,
 } from "@/lib/membershipRepository";
@@ -121,11 +122,7 @@ export async function POST(request: Request) {
 
     return redirectToAdmin(request, "membership-manage-invalid");
   } catch (error) {
-    const isDuplicateRecord =
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "23505";
+    const isDuplicateRecord = isCnicUniqueViolation(error);
 
     return redirectToAdmin(
       request,

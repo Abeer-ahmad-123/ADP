@@ -74,14 +74,28 @@ function renderSvgLines(
     .join("");
 }
 
-export function createMembershipNumber(values: MemberFormValues) {
-  const serial = `${Date.now().toString(36)}${Math.floor(
-    Math.random() * 9999,
-  )
-    .toString()
-    .padStart(4, "0")}`
+function createRandomSerial(length: number) {
+  const cryptoApi = globalThis.crypto;
+
+  if (cryptoApi?.getRandomValues) {
+    const bytes = new Uint8Array(Math.ceil(length / 2));
+    cryptoApi.getRandomValues(bytes);
+
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase()
+      .slice(0, length);
+  }
+
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`
+    .replace(/[^a-z0-9]/gi, "")
     .toUpperCase()
-    .slice(-8);
+    .padEnd(length, "0")
+    .slice(-length);
+}
+
+export function createMembershipNumber(values: MemberFormValues) {
+  const serial = createRandomSerial(10);
 
   return `${PARTY_SHORT_NAME}-PK-${getCityCode(values.city)}-${serial}`;
 }
@@ -142,31 +156,31 @@ export function createMembershipSvg(
   record: MemberRecord,
   logoHref = getDefaultLogoHref(),
 ) {
-  const nameLines = splitSvgLines(record.fullName, 19, 2);
-  const memberNumberLines = splitSvgLines(record.membershipNumber, 19, 2);
+  const nameLines = splitSvgLines(record.fullName, 28, 2);
+  const memberNumberLines = splitSvgLines(record.membershipNumber, 34, 1);
   const cityLines = splitSvgLines(
     `${record.city}, ${record.province}`,
-    34,
+    28,
     1,
   );
 
-  return `<svg width="638" height="760" viewBox="0 0 638 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="856" height="540" viewBox="0 0 856 540" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="card_shadow" x="0" y="0" width="638" height="760" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#071814" flood-opacity="0.26"/>
+    <filter id="card_shadow" x="0" y="0" width="856" height="540" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#071814" flood-opacity="0.24"/>
     </filter>
     <clipPath id="card_clip">
-      <rect x="24" y="24" width="590" height="712" rx="28"/>
+      <rect x="24" y="24" width="808" height="492" rx="28"/>
     </clipPath>
     <clipPath id="card_logo_clip">
-      <rect x="219" y="62" width="200" height="146" rx="28"/>
+      <rect x="664" y="54" width="128" height="96" rx="18"/>
     </clipPath>
-    <linearGradient id="card_base" x1="24" y1="24" x2="614" y2="736" gradientUnits="userSpaceOnUse">
+    <linearGradient id="card_base" x1="24" y1="24" x2="832" y2="516" gradientUnits="userSpaceOnUse">
       <stop stop-color="#03170F"/>
       <stop offset="0.48" stop-color="#063724"/>
       <stop offset="1" stop-color="#02150E"/>
     </linearGradient>
-    <linearGradient id="card_fabric_fold" x1="24" y1="24" x2="614" y2="736" gradientUnits="userSpaceOnUse">
+    <linearGradient id="card_fabric_fold" x1="24" y1="24" x2="832" y2="516" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FFFFFF" stop-opacity="0.14"/>
       <stop offset="0.18" stop-color="#FFFFFF" stop-opacity="0.05"/>
       <stop offset="0.34" stop-color="#000000" stop-opacity="0.16"/>
@@ -174,38 +188,42 @@ export function createMembershipSvg(
       <stop offset="0.72" stop-color="#000000" stop-opacity="0.18"/>
       <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.05"/>
     </linearGradient>
-    <radialGradient id="card_fabric_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(162 104) rotate(55) scale(288 216)">
+    <radialGradient id="card_fabric_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(180 86) rotate(28) scale(360 220)">
       <stop stop-color="#FFFFFF" stop-opacity="0.16"/>
       <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="card_gold_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(442 112) rotate(91) scale(180 164)">
+    <radialGradient id="card_gold_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(682 114) rotate(91) scale(196 180)">
       <stop stop-color="#D8A235" stop-opacity="0.13"/>
       <stop offset="1" stop-color="#D8A235" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect x="24" y="24" width="590" height="712" rx="28" fill="url(#card_base)" filter="url(#card_shadow)"/>
+  <rect x="24" y="24" width="808" height="492" rx="28" fill="url(#card_base)" filter="url(#card_shadow)"/>
   <g clip-path="url(#card_clip)">
-    <rect x="24" y="24" width="590" height="712" fill="url(#card_base)"/>
-    <rect x="24" y="24" width="590" height="712" fill="url(#card_fabric_fold)"/>
-    <rect x="24" y="24" width="590" height="712" fill="url(#card_fabric_glow)"/>
-    <rect x="24" y="24" width="590" height="712" fill="url(#card_gold_glow)"/>
-    <path d="M24 98C120 56 196 104 272 78C356 50 448 64 614 28V736H24V98Z" fill="#FFFFFF" opacity="0.045"/>
-    <path d="M24 606C122 570 204 606 292 582C402 552 492 556 614 504V736H24V606Z" fill="#000000" opacity="0.12"/>
+    <rect x="24" y="24" width="808" height="492" fill="url(#card_base)"/>
+    <rect x="24" y="24" width="808" height="492" fill="url(#card_fabric_fold)"/>
+    <rect x="24" y="24" width="808" height="492" fill="url(#card_fabric_glow)"/>
+    <rect x="24" y="24" width="808" height="492" fill="url(#card_gold_glow)"/>
+    <path d="M24 96C136 52 238 92 344 66C454 38 594 62 832 30V516H24V96Z" fill="#FFFFFF" opacity="0.045"/>
+    <path d="M24 420C160 374 274 416 412 382C562 346 674 362 832 304V516H24V420Z" fill="#000000" opacity="0.13"/>
   </g>
-  <rect x="24.5" y="24.5" width="589" height="711" rx="27.5" stroke="#D8A235" stroke-opacity="0.34"/>
-  <image href="${escapeXml(logoHref)}" x="219" y="62" width="200" height="146" preserveAspectRatio="xMidYMid slice" clip-path="url(#card_logo_clip)"/>
-  <rect x="219.5" y="62.5" width="199" height="145" rx="27.5" stroke="#D8A235" stroke-opacity="0.64"/>
-  <text x="319" y="252" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="950" text-anchor="middle">${escapeXml(PARTY_NAME)}</text>
-  <text x="319" y="282" fill="#D8A235" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="900" letter-spacing="1.8" text-anchor="middle">DIGITAL MEMBERSHIP CARD</text>
-  <text x="70" y="362" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="900">MEMBER NAME</text>
-  <text x="70" y="410" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="950">${renderSvgLines(nameLines, { x: 70, lineHeight: 44 })}</text>
-  <text x="70" y="520" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">MEMBERSHIP NO.</text>
-  <text x="70" y="556" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${renderSvgLines(memberNumberLines, { x: 70, lineHeight: 28 })}</text>
-  <text x="342" y="520" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">JOINED</text>
-  <text x="342" y="556" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${escapeXml(record.joinedOn)}</text>
-  <text x="70" y="638" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">CITY / TEHSIL</text>
-  <text x="70" y="674" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="900">${renderSvgLines(cityLines, { x: 70, lineHeight: 28 })}</text>
-  <text x="319" y="720" fill="#FFFFFF" fill-opacity="0.72" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="900" letter-spacing="1.4" text-anchor="middle">SAB SE PEHLE AWAM</text>
+  <rect x="24.5" y="24.5" width="807" height="491" rx="27.5" stroke="#D8A235" stroke-opacity="0.34"/>
+  <image href="${escapeXml(logoHref)}" x="664" y="54" width="128" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#card_logo_clip)"/>
+  <rect x="664.5" y="54.5" width="127" height="95" rx="17.5" stroke="#D8A235" stroke-opacity="0.64"/>
+  <text x="64" y="76" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="950">${escapeXml(PARTY_NAME)}</text>
+  <text x="64" y="108" fill="#D8A235" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="900">DIGITAL MEMBERSHIP CARD</text>
+  <rect x="64" y="178" width="64" height="46" rx="8" fill="#E9C96E" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <path d="M64 201H128M96 178V224M76 178V224M116 178V224" stroke="#071814" stroke-opacity="0.22"/>
+  <rect x="80" y="190" width="32" height="22" rx="11" stroke="#071814" stroke-opacity="0.24"/>
+  <text x="736" y="210" fill="#FFFFFF" fill-opacity="0.74" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="900" text-anchor="middle">MEMBER ID</text>
+  <text x="64" y="286" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">MEMBERSHIP NO.</text>
+  <text x="64" y="326" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="950">${renderSvgLines(memberNumberLines, { x: 64, lineHeight: 32 })}</text>
+  <text x="64" y="416" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="900">MEMBER NAME</text>
+  <text x="64" y="452" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="950">${renderSvgLines(nameLines, { x: 64, lineHeight: 27 })}</text>
+  <text x="392" y="416" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="900">JOINED</text>
+  <text x="392" y="452" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="900">${escapeXml(record.joinedOn)}</text>
+  <text x="570" y="416" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="900">CITY / TEHSIL</text>
+  <text x="570" y="452" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="900">${renderSvgLines(cityLines, { x: 570, lineHeight: 24 })}</text>
+  <text x="428" y="500" fill="#FFFFFF" fill-opacity="0.72" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="900" text-anchor="middle">SAB SE PEHLE AWAM</text>
 </svg>`;
 }
 

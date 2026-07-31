@@ -1,5 +1,6 @@
 import {
   createStoredMembership,
+  isCnicUniqueViolation,
   validateMembershipPayload,
 } from "@/lib/membershipRepository";
 
@@ -30,11 +31,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const isMissingDatabase =
       error instanceof Error && error.message.includes("DATABASE_URL");
-    const isDuplicateRecord =
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "23505";
+    const isDuplicateRecord = isCnicUniqueViolation(error);
 
     return Response.json(
       {

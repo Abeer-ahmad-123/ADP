@@ -30,6 +30,24 @@ alter table memberships
 alter table memberships
   add column if not exists confirms_eligibility boolean not null default false;
 
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint c
+    join pg_class t on t.oid = c.conrelid
+    join pg_attribute a on a.attrelid = t.oid and a.attnum = c.conkey[1]
+    where t.relname = 'memberships'
+      and c.contype = 'u'
+      and array_length(c.conkey, 1) = 1
+      and a.attname = 'membership_number'
+  ) then
+    alter table memberships
+      add constraint memberships_membership_number_unique unique (membership_number);
+  end if;
+end
+$$;
+
 drop index if exists memberships_wing_idx;
 
 alter table memberships

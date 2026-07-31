@@ -65,7 +65,7 @@ function createMembershipPrintDocument(cardSvg: string) {
     <style>
       @page {
         margin: 0;
-        size: A4 portrait;
+        size: A4 landscape;
       }
 
       * {
@@ -94,25 +94,33 @@ function createMembershipPrintDocument(cardSvg: string) {
         height: auto;
         max-height: calc(100vh - 32px);
         max-width: calc(100vw - 32px);
-        width: min(638px, calc(100vw - 32px));
+        width: min(856px, calc(100vw - 32px));
       }
 
       @media print {
         html,
         body {
-          height: 297mm;
-          width: 210mm;
+          height: 100%;
+          overflow: hidden;
+          width: 100%;
         }
 
         body {
-          min-height: 297mm;
+          height: 100vh;
+          min-height: 0;
           padding: 0;
         }
 
         .membership-print-svg {
-          max-height: 276mm;
-          max-width: 194mm;
-          width: 194mm;
+          break-after: avoid;
+          break-before: avoid;
+          break-inside: avoid;
+          max-height: 118mm;
+          max-width: 270mm;
+          page-break-after: avoid;
+          page-break-before: avoid;
+          page-break-inside: avoid;
+          width: 170mm;
         }
       }
     </style>
@@ -453,26 +461,34 @@ export default function MembershipSection() {
         <div className="membership-card-panel reveal-up delay-2">
           <div className="membership-print-card membership-card">
             <div className="card-topline">
+              <div className="card-identity">
+                <span className="card-party-name">{PARTY_NAME}</span>
+                <span className="card-card-type">Digital membership card</span>
+              </div>
               <span className="card-top-logo">
                 <Image
                   alt={PARTY_LOGO_ALT}
                   fill
-                  sizes="164px"
+                  sizes="(max-width: 700px) 64px, 108px"
                   src={PARTY_LOGO_SRC}
                 />
                 <span className="sr-only">{PARTY_SHORT_NAME}</span>
               </span>
-              <span className="card-party-name">{PARTY_NAME}</span>
-              <span className="card-card-type">Digital membership card</span>
             </div>
-            <div>
-              <p className="card-label">Member name</p>
-              <h3>{livePreview.fullName}</h3>
+            <div className="card-chip-row">
+              <span className="card-chip" aria-hidden="true">
+                <span />
+              </span>
+              <span className="card-validity">Member ID</span>
+            </div>
+            <div className="card-number-block">
+              <p className="card-label">Membership no.</p>
+              <strong>{livePreview.membershipNumber}</strong>
             </div>
             <div className="card-grid">
               <div>
-                <p className="card-label">Membership no.</p>
-                <strong>{livePreview.membershipNumber}</strong>
+                <p className="card-label">Member name</p>
+                <h3>{livePreview.fullName}</h3>
               </div>
               <div>
                 <p className="card-label">Joined</p>

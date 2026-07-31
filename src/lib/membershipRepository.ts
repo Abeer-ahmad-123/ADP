@@ -27,6 +27,14 @@ export type MembershipValidationResult =
 const PHONE_PATTERN = /^(?:\+923[0-9]{9}|03[0-9]{9})$/;
 const CNIC_PATTERN = /^[0-9]{5}-[0-9]{7}-[0-9]$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UNIQUE_VIOLATION_CODE = "23505";
+const MAX_MEMBERSHIP_NUMBER_ATTEMPTS = 5;
+const CNIC_UNIQUE_CONSTRAINTS = new Set(["memberships_cnic_unique_idx"]);
+const MEMBERSHIP_NUMBER_UNIQUE_CONSTRAINTS = new Set([
+  "memberships_membership_number_key",
+  "memberships_membership_number_unique",
+  "memberships_membership_number_unique_idx",
+]);
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -70,6 +78,53 @@ function toMemberRecord(row: MembershipRow): MemberRecord {
     province: row.province,
     residentialAddress: row.residential_address,
   };
+}
+
+function getPostgresErrorValue(
+  error: unknown,
+  key: "code" | "constraint" | "detail",
+) {
+  if (typeof error !== "object" || error === null || !(key in error)) {
+    return "";
+  }
+
+  const value = (error as Record<string, unknown>)[key];
+
+  return typeof value === "string" ? value : "";
+}
+
+function isUniqueViolation(error: unknown) {
+  return getPostgresErrorValue(error, "code") === UNIQUE_VIOLATION_CODE;
+}
+
+function hasUniqueViolationDetail(error: unknown, column: string) {
+  return getPostgresErrorValue(error, "detail").includes(`(${column})=`);
+}
+
+export function isCnicUniqueViolation(error: unknown) {
+  if (!isUniqueViolation(error)) {
+    return false;
+  }
+
+  const constraint = getPostgresErrorValue(error, "constraint");
+
+  return (
+    CNIC_UNIQUE_CONSTRAINTS.has(constraint) ||
+    hasUniqueViolationDetail(error, "cnic")
+  );
+}
+
+function isMembershipNumberUniqueViolation(error: unknown) {
+  if (!isUniqueViolation(error)) {
+    return false;
+  }
+
+  const constraint = getPostgresErrorValue(error, "constraint");
+
+  return (
+    MEMBERSHIP_NUMBER_UNIQUE_CONSTRAINTS.has(constraint) ||
+    hasUniqueViolationDetail(error, "membership_number")
+  );
 }
 
 export function validateMembershipPayload(
@@ -159,54 +214,71 @@ export function validateMembershipPayload(
 
 export async function createStoredMembership(values: MemberFormValues) {
   const pool = getPool();
-  const membershipNumber = createMembershipNumber(values);
-  const result = await pool.query<MembershipRow>(
-    `
-      insert into memberships (
-        membership_number,
-        affirms_declaration,
-        cnic,
-        full_name,
-        parent_or_spouse_name,
-        residential_address,
-        city,
-        province,
-        phone,
-        email,
-        confirms_eligibility
-      )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      returning
-        membership_number,
-        affirms_declaration,
-        cnic,
-        full_name,
-        parent_or_spouse_name,
-        residential_address,
-        city,
-        province,
-        phone,
-        email,
-        confirms_eligibility,
-        joined_on,
-        created_at
-    `,
-    [
-      membershipNumber,
-      values.affirmsDeclaration,
-      values.cnic,
-      values.fullName,
-      values.parentOrSpouseName,
-      values.residentialAddress,
-      values.city,
-      values.province,
-      values.phone,
-      values.email,
-      values.confirmsEligibility,
-    ],
-  );
 
-  return toMemberRecord(result.rows[0]);
+  for (let attempt = 1; attempt <= MAX_MEMBERSHIP_NUMBER_ATTEMPTS; attempt += 1) {
+    const membershipNumber = createMembershipNumber(values);
+
+    try {
+      const result = await pool.query<MembershipRow>(
+        `
+          insert into memberships (
+            membership_number,
+            affirms_declaration,
+            cnic,
+            full_name,
+            parent_or_spouse_name,
+            residential_address,
+            city,
+            province,
+            phone,
+            email,
+            confirms_eligibility
+          )
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          returning
+            membership_number,
+            affirms_declaration,
+            cnic,
+            full_name,
+            parent_or_spouse_name,
+            residential_address,
+            city,
+            province,
+            phone,
+            email,
+            confirms_eligibility,
+            joined_on,
+            created_at
+        `,
+        [
+          membershipNumber,
+          values.affirmsDeclaration,
+          values.cnic,
+          values.fullName,
+          values.parentOrSpouseName,
+          values.residentialAddress,
+          values.city,
+          values.province,
+          values.phone,
+          values.email,
+          values.confirmsEligibility,
+        ],
+      );
+
+      return toMemberRecord(result.rows[0]);
+    } catch (error) {
+      if (
+        isMembershipNumberUniqueViolation(error) &&
+        attempt < MAX_MEMBERSHIP_NUMBER_ATTEMPTS
+      ) {
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error("Membership number could not be generated.");
 }
 
 export async function getStoredMembershipByNumber(membershipNumber: string) {
