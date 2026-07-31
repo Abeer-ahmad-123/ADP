@@ -125,7 +125,7 @@ export default function AnnouncementPopup({
           <p className="eyebrow">Latest announcement</p>
         </div>
         <h2 id="announcement-popup-title">{latestAnnouncement.title}</h2>
-        <p>{latestAnnouncement.summary}</p>
+        <p className="preserve-entered-text">{latestAnnouncement.summary}</p>
 
         <div className="announcement-actions">
           <Link

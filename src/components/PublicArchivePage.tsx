@@ -182,7 +182,7 @@ export function PublicItemGrid({
         <article className="archive-card" key={item.title}>
           <p>{item.meta}</p>
           <h2>{item.title}</h2>
-          <span>{item.summary}</span>
+          <span className="preserve-entered-text">{item.summary}</span>
         </article>
       ))}
     </div>
@@ -224,7 +224,7 @@ export function LeadershipArchive({
           </div>
           <p>{profile.role}</p>
           <h2>{profile.name}</h2>
-          <span>{profile.summary}</span>
+          <span className="preserve-entered-text">{profile.summary}</span>
         </article>
       ))}
     </div>
@@ -255,7 +255,7 @@ export function GalleryArchive({ photos }: { photos: GalleryPhoto[] }) {
               Gallery · {photo.publishedAt}
             </p>
             <h2>{photo.title}</h2>
-            <span>{photo.summary}</span>
+            <span className="preserve-entered-text">{photo.summary}</span>
           </div>
         </article>
       ))}
@@ -289,7 +289,7 @@ export function MediaArchive({ items }: { items: MediaItem[] }) {
                       {item.speaker ? ` · ${item.speaker}` : ""}
                     </p>
                     <h2>{item.title}</h2>
-                    <span>{item.summary}</span>
+                    <span className="preserve-entered-text">{item.summary}</span>
                     {!item.mediaUrl && (
                       <div className="media-placeholder-note">
                         <Volume2 aria-hidden="true" size={14} />

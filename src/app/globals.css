@@ -605,6 +605,11 @@ a {
   text-transform: uppercase;
 }
 
+.preserve-entered-text {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 .scroll-cue {
   align-items: center;
   animation: cue-bounce 1.8s ease-in-out infinite;
