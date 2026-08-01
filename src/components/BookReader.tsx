@@ -1,6 +1,13 @@
 "use client";
 
-import { type AnimationEvent, useEffect, useMemo, useState } from "react";
+import {
+  type AnimationEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 import {
   ChevronLeft,
@@ -22,6 +29,11 @@ type BookTurn = {
   direction: Exclude<TurnDirection, null>;
   targetIndex: number;
 };
+
+const BOOK_PAGE_IMAGE_HEIGHT = 1320;
+const BOOK_PAGE_IMAGE_SIZES =
+  "(max-width: 700px) 330px, (max-width: 1200px) 44vw, 520px";
+const BOOK_PAGE_IMAGE_WIDTH = 1020;
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
@@ -54,11 +66,11 @@ function renderBookPage(
       alt={ariaHidden ? "" : page.imageAlt || `${bookTitle}, page ${page.pageNumber}`}
       className="book-page-image"
       draggable={false}
-      height={1320}
+      height={BOOK_PAGE_IMAGE_HEIGHT}
       priority={page.pageNumber <= 4}
-      sizes="(max-width: 700px) 330px, (max-width: 1200px) 44vw, 520px"
+      sizes={BOOK_PAGE_IMAGE_SIZES}
       src={page.imageSrc}
-      width={1020}
+      width={BOOK_PAGE_IMAGE_WIDTH}
     />
   ) : null;
 
@@ -99,10 +111,26 @@ export default function BookReader({
   title,
 }: BookReaderProps) {
   const [pageIndex, setPageIndex] = useState(0);
+  const [pendingTurn, setPendingTurn] = useState<BookTurn | null>(null);
   const [turn, setTurn] = useState<BookTurn | null>(null);
+  const pendingTurnRef = useRef<BookTurn | null>(null);
+  const preloadedPageImagesRef = useRef<Set<string>>(new Set());
+  const preloadContainerRef = useRef<HTMLDivElement | null>(null);
+  const turnRef = useRef<BookTurn | null>(null);
   const isMobileBook = useMediaQuery("(max-width: 700px)");
   const pageStep = isMobileBook ? 1 : 2;
   const hasPages = pages.length > 0;
+  const pageImageSources = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          pages
+            .map((page) => page.imageSrc)
+            .filter((source): source is string => Boolean(source)),
+        ),
+      ),
+    [pages],
+  );
   const maxStartIndex = useMemo(() => {
     if (pages.length <= 1) {
       return 0;
@@ -141,56 +169,140 @@ export default function BookReader({
     : currentMobilePage;
   const isFirstSpread = safePageIndex === 0;
   const isLastSpread = safePageIndex >= maxStartIndex;
+  const isPreparingTurn = Boolean(pendingTurn);
   const isTurning = Boolean(turn);
+  const isReaderBusy = isTurning || isPreparingTurn;
+
+  const arePagesReadyForIndex = useCallback(
+    (
+      targetIndex: number,
+      loadedImages: Set<string> = preloadedPageImagesRef.current,
+    ) => {
+      const isPageReady = (page: BookSpread | undefined) =>
+        !page?.imageSrc || loadedImages.has(page.imageSrc);
+
+      if (isMobileBook) {
+        return isPageReady(pages[targetIndex]);
+      }
+
+      const targetLeft = pages[targetIndex];
+      const targetRight = pages[targetIndex + 1] ?? targetLeft;
+
+      return isPageReady(targetLeft) && isPageReady(targetRight);
+    },
+    [isMobileBook, pages],
+  );
+
+  const markPageImageLoaded = useCallback(
+    (source: string) => {
+      const loadedImages = preloadedPageImagesRef.current;
+      loadedImages.add(source);
+
+      const waitingTurn = pendingTurnRef.current;
+      if (
+        waitingTurn &&
+        !turnRef.current &&
+        arePagesReadyForIndex(waitingTurn.targetIndex, loadedImages)
+      ) {
+        pendingTurnRef.current = null;
+        turnRef.current = waitingTurn;
+        setTurn(waitingTurn);
+        setPendingTurn(null);
+      }
+    },
+    [arePagesReadyForIndex],
+  );
+
+  const syncCompletePreloadImages = useCallback(() => {
+    preloadContainerRef.current
+      ?.querySelectorAll<HTMLImageElement>("img[data-book-preload-src]")
+      .forEach((image) => {
+        const source = image.dataset.bookPreloadSrc;
+
+        if (source && image.complete) {
+          markPageImageLoaded(source);
+        }
+      });
+  }, [markPageImageLoaded]);
+
+  useEffect(() => {
+    pendingTurnRef.current = pendingTurn;
+  }, [pendingTurn]);
+
+  useEffect(() => {
+    turnRef.current = turn;
+  }, [turn]);
+
+  useEffect(() => {
+    syncCompletePreloadImages();
+  }, [pageImageSources, syncCompletePreloadImages]);
 
   const spreadLabel = useMemo(
-    () =>
-      !hasPages
+    () => {
+      if (pendingTurn) {
+        return "Preparing pages...";
+      }
+
+      return !hasPages
         ? "No pages"
         : isMobileBook
         ? `Page ${targetMobilePage.pageNumber}`
-        : `Pages ${targetLeftPage.pageNumber}-${targetRightPage.pageNumber}`,
+        : `Pages ${targetLeftPage.pageNumber}-${targetRightPage.pageNumber}`;
+    },
     [
       hasPages,
       isMobileBook,
+      pendingTurn,
       targetLeftPage?.pageNumber,
       targetMobilePage?.pageNumber,
       targetRightPage?.pageNumber,
     ],
   );
 
+  function requestTurn(nextTurn: BookTurn) {
+    if (arePagesReadyForIndex(nextTurn.targetIndex)) {
+      turnRef.current = nextTurn;
+      setTurn(nextTurn);
+      return;
+    }
+
+    pendingTurnRef.current = nextTurn;
+    setPendingTurn(nextTurn);
+    syncCompletePreloadImages();
+  }
+
   function goNext() {
-    if (isLastSpread || isTurning) {
+    if (isLastSpread || isReaderBusy) {
       return;
     }
 
     const targetIndex = Math.min(safePageIndex + pageStep, maxStartIndex);
 
-    setTurn({
+    requestTurn({
       direction: "next",
       targetIndex,
     });
   }
 
   function goPrevious() {
-    if (isFirstSpread || isTurning) {
+    if (isFirstSpread || isReaderBusy) {
       return;
     }
 
     const targetIndex = Math.max(safePageIndex - pageStep, 0);
 
-    setTurn({
+    requestTurn({
       direction: "previous",
       targetIndex,
     });
   }
 
   function resetBook() {
-    if (isTurning || isFirstSpread) {
+    if (isReaderBusy || isFirstSpread) {
       return;
     }
 
-    setTurn({
+    requestTurn({
       direction: "previous",
       targetIndex: 0,
     });
@@ -206,11 +318,38 @@ export default function BookReader({
     }
 
     setPageIndex(turn.targetIndex);
+    turnRef.current = null;
     setTurn(null);
   }
 
   return (
     <div className={`${compact ? "book-shell compact" : "book-shell"} pdf-book`}>
+      {pageImageSources.length > 0 && (
+        <div
+          aria-hidden="true"
+          className="book-preload-cache"
+          ref={preloadContainerRef}
+        >
+          {pageImageSources.map((source) => (
+            <Image
+              alt=""
+              className="book-preload-image"
+              data-book-preload-src={source}
+              draggable={false}
+              fetchPriority="low"
+              height={BOOK_PAGE_IMAGE_HEIGHT}
+              key={source}
+              loading="eager"
+              onError={() => markPageImageLoaded(source)}
+              onLoad={() => markPageImageLoaded(source)}
+              sizes={BOOK_PAGE_IMAGE_SIZES}
+              src={source}
+              width={BOOK_PAGE_IMAGE_WIDTH}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="book-toolbar">
         <div>
           <p className="eyebrow">Party book</p>
@@ -279,7 +418,7 @@ export default function BookReader({
           type="button"
           aria-label="Previous spread"
           onClick={goPrevious}
-          disabled={!hasPages || isFirstSpread || isTurning}
+          disabled={!hasPages || isFirstSpread || isReaderBusy}
         >
           <ChevronLeft aria-hidden="true" size={18} />
           Previous
@@ -288,7 +427,7 @@ export default function BookReader({
           type="button"
           aria-label={`Reset ${partyName} book`}
           onClick={resetBook}
-          disabled={!hasPages || isFirstSpread || isTurning}
+          disabled={!hasPages || isFirstSpread || isReaderBusy}
         >
           <RotateCcw aria-hidden="true" size={16} />
           Reset
@@ -297,7 +436,7 @@ export default function BookReader({
           type="button"
           aria-label="Next spread"
           onClick={goNext}
-          disabled={!hasPages || isLastSpread || isTurning}
+          disabled={!hasPages || isLastSpread || isReaderBusy}
         >
           Next
           <ChevronRight aria-hidden="true" size={18} />

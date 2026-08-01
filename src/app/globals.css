@@ -2876,6 +2876,24 @@ a {
   --book-page-height: 840px;
 }
 
+.book-preload-cache {
+  bottom: 0;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  width: 1px;
+  z-index: -1;
+}
+
+.book-preload-image {
+  display: block;
+  height: 1px !important;
+  width: 1px !important;
+}
+
 .book-toolbar {
   align-items: center;
   color: white;
