@@ -113,11 +113,10 @@ export const PROVINCES = [
 ];
 
 export const SOCIAL_LINKS: SocialLink[] = [
-  { label: "Twitter", href: "https://x.com/AwamDostParty" },
-  { label: "Facebook", href: "https://example.com/facebook" },
-  { label: "Instagram", href: "https://example.com/instagram" },
-  { label: "YouTube", href: "https://www.youtube.com/@AwamDostParty-2026" },
-  { label: "WhatsApp Channel", href: "https://example.com/whatsapp" },
+  { label: "Twitter", href: "https://x.com/AwamDostParty_" },
+  { label: "YouTube", href: "https://www.youtube.com/@awamdostparty-k2h" },
+  { label: "Facebook", href: "https://www.facebook.com/share/14qR2Khf8JR/" },
+  { label: "WhatsApp Channel", href: "https://whatsapp.com/channel/0029VbCiHei1HspussyA9o0y" },
 ];
 
 export const FOOTER_NAV_GROUPS = [
@@ -151,7 +150,7 @@ export const FOOTER_NAV_GROUPS = [
 ];
 
 export const FOOTER_CONTACTS = [
-  { label: "info@adp.example", href: "mailto:info@adp.example" },
+  { label: "awamdostparty.org@gmail.com", href: "mailto:awamdostparty.org@gmail.com" },
   { label: "0343-9500000", href: "tel:+923439500000" },
   { label: "Islamabad campaign secretariat", href: "" },
 ];
