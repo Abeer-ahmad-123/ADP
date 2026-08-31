@@ -29,8 +29,10 @@ function isFilledPdf(value: FormDataEntryValue | null): value is File {
 
 export default function AdminManifestoPanel({
   manifesto,
+  useDirectBlobUpload,
 }: {
   manifesto: ManifestoDocument;
+  useDirectBlobUpload: boolean;
 }) {
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
@@ -39,11 +41,16 @@ export default function AdminManifestoPanel({
   const hasExistingPdf = Boolean(manifesto.pdfHref);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
     if (isUploading) {
+      event.preventDefault();
       return;
     }
+
+    if (!useDirectBlobUpload) {
+      return;
+    }
+
+    event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
     const file = formData.get("file");

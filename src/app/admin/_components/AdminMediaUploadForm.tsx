@@ -35,18 +35,27 @@ function getFallbackContentType(kind: MediaKind) {
   return kind === "audio" ? "audio/mpeg" : "video/mp4";
 }
 
-export default function AdminMediaUploadForm() {
+export default function AdminMediaUploadForm({
+  useDirectBlobUpload,
+}: {
+  useDirectBlobUpload: boolean;
+}) {
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [statusLabel, setStatusLabel] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
     if (isUploading) {
+      event.preventDefault();
       return;
     }
+
+    if (!useDirectBlobUpload) {
+      return;
+    }
+
+    event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
     const kind = formData.get("kind");

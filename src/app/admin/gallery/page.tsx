@@ -72,7 +72,12 @@ export default async function AdminGalleryPage({
         </article>
       </section>
 
-      <AdminGalleryUploadForm />
+      <AdminGalleryUploadForm
+        useDirectBlobUpload={
+          process.env.NODE_ENV === "production" &&
+          Boolean(process.env.BLOB_READ_WRITE_TOKEN)
+        }
+      />
 
       <section className="admin-panel admin-action-panel">
         <div>

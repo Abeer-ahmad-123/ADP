@@ -1,4 +1,4 @@
-import type { QueryResultRow } from "pg";
+import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { getPool } from "@/lib/postgres";
 import type {
   ContentEntry,
@@ -22,6 +22,17 @@ type ContentEntryRow = QueryResultRow & {
   updated_at: Date | string;
 };
 
+type CreateContentEntryInput = {
+  body: string;
+  isPublished: boolean;
+  kind: ContentKind;
+  mediaUrl: string;
+  personRole: string;
+  summary: string;
+  thumbnailUrl: string;
+  title: string;
+};
+
 const KIND_LABELS: Record<ContentKind, string> = {
   announcement: "Announcement",
   audio: "Audio",
@@ -32,6 +43,35 @@ const KIND_LABELS: Record<ContentKind, string> = {
   party_activity: "Activity",
   video_reel: "Video Reel",
 };
+
+const CREATE_CONTENT_ENTRY_SQL = `
+  insert into content_entries (
+    kind,
+    title,
+    summary,
+    body,
+    person_role,
+    media_url,
+    thumbnail_url,
+    is_published
+  )
+  values ($1, $2, $3, $4, $5, $6, $7, $8)
+  returning
+    id,
+    kind,
+    title,
+    summary,
+    body,
+    person_role,
+    media_url,
+    thumbnail_url,
+    published_at,
+    is_published,
+    created_at,
+    updated_at
+`;
+
+const GALLERY_GROUP_PREFIX = "gallery-group:";
 
 const KIND_HREFS: Record<ContentKind, string> = {
   announcement: "/announcements",
@@ -68,6 +108,58 @@ function toContentEntry(row: ContentEntryRow): ContentEntry {
     thumbnailUrl: row.thumbnail_url || "",
     title: row.title,
     updatedAt: formatDate(row.updated_at),
+  };
+}
+
+function getCreateContentEntryParams({
+  body,
+  isPublished,
+  kind,
+  mediaUrl,
+  personRole,
+  summary,
+  thumbnailUrl,
+  title,
+}: CreateContentEntryInput) {
+  return [
+    kind,
+    title,
+    summary,
+    body || null,
+    personRole || null,
+    mediaUrl || null,
+    thumbnailUrl || null,
+    isPublished,
+  ];
+}
+
+async function insertContentEntry(
+  client: Pool | PoolClient,
+  entry: CreateContentEntryInput,
+) {
+  const result = await client.query<ContentEntryRow>(
+    CREATE_CONTENT_ENTRY_SQL,
+    getCreateContentEntryParams(entry),
+  );
+
+  return toContentEntry(result.rows[0]);
+}
+
+function getGalleryGroupMetadata(body: string) {
+  if (!body.startsWith(GALLERY_GROUP_PREFIX)) {
+    return {};
+  }
+
+  const [groupId, orderValue] = body.slice(GALLERY_GROUP_PREFIX.length).split(":");
+  const groupOrder = Number(orderValue);
+
+  if (!groupId) {
+    return {};
+  }
+
+  return {
+    groupKey: `${GALLERY_GROUP_PREFIX}${groupId}`,
+    groupOrder: Number.isFinite(groupOrder) ? groupOrder : 0,
   };
 }
 
@@ -171,57 +263,42 @@ export async function createContentEntry({
   summary,
   thumbnailUrl,
   title,
-}: {
-  body: string;
-  isPublished: boolean;
-  kind: ContentKind;
-  mediaUrl: string;
-  personRole: string;
-  summary: string;
-  thumbnailUrl: string;
-  title: string;
-}) {
+}: CreateContentEntryInput) {
   const pool = getPool();
-  const result = await pool.query<ContentEntryRow>(
-    `
-      insert into content_entries (
-        kind,
-        title,
-        summary,
-        body,
-        person_role,
-        media_url,
-        thumbnail_url,
-        is_published
-      )
-      values ($1, $2, $3, $4, $5, $6, $7, $8)
-      returning
-        id,
-        kind,
-        title,
-        summary,
-        body,
-        person_role,
-        media_url,
-        thumbnail_url,
-        published_at,
-        is_published,
-        created_at,
-        updated_at
-    `,
-    [
-      kind,
-      title,
-      summary,
-      body || null,
-      personRole || null,
-      mediaUrl || null,
-      thumbnailUrl || null,
-      isPublished,
-    ],
-  );
 
-  return toContentEntry(result.rows[0]);
+  return insertContentEntry(pool, {
+    body,
+    isPublished,
+    kind,
+    mediaUrl,
+    personRole,
+    summary,
+    thumbnailUrl,
+    title,
+  });
+}
+
+export async function createContentEntries(entries: CreateContentEntryInput[]) {
+  const pool = getPool();
+  const client = await pool.connect();
+  const created: ContentEntry[] = [];
+
+  try {
+    await client.query("begin");
+
+    for (const entry of entries) {
+      created.push(await insertContentEntry(client, entry));
+    }
+
+    await client.query("commit");
+
+    return created;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function updateContentEntry({
@@ -359,6 +436,7 @@ export async function getPublicGalleryPhotos() {
     return entries
       .filter((entry) => entry.mediaUrl)
       .map((entry) => ({
+        ...getGalleryGroupMetadata(entry.body),
         id: entry.id,
         imageUrl: entry.mediaUrl,
         publishedAt: entry.publishedAt,

@@ -24,18 +24,27 @@ function isFilledPdf(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.size > 0;
 }
 
-export default function AdminBookUploadForm() {
+export default function AdminBookUploadForm({
+  useDirectBlobUpload,
+}: {
+  useDirectBlobUpload: boolean;
+}) {
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [statusLabel, setStatusLabel] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
     if (isUploading) {
+      event.preventDefault();
       return;
     }
+
+    if (!useDirectBlobUpload) {
+      return;
+    }
+
+    event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
     const file = formData.get("file");

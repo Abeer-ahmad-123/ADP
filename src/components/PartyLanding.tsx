@@ -7,11 +7,15 @@ import MembershipSection from "@/components/MembershipSection";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
-export default function PartyLanding() {
+export default function PartyLanding({
+  heroImageSrc,
+}: {
+  heroImageSrc?: string;
+}) {
   return (
     <main>
       <SiteHeader />
-      <HeroSection />
+      <HeroSection heroImageSrc={heroImageSrc} />
       <ApproachSection />
       <ManifestoSection />
       <MembershipSection />

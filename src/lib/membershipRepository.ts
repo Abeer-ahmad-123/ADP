@@ -24,6 +24,11 @@ export type MembershipValidationResult =
   | { ok: true; values: MemberFormValues }
   | { ok: false; message: string };
 
+export type MembershipSaveResult = {
+  member: MemberRecord;
+  status: "created" | "updated";
+};
+
 const PHONE_PATTERN = /^(?:\+923[0-9]{9}|03[0-9]{9})$/;
 const CNIC_PATTERN = /^[0-9]{5}-[0-9]{7}-[0-9]$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -279,6 +284,88 @@ export async function createStoredMembership(values: MemberFormValues) {
   }
 
   throw new Error("Membership number could not be generated.");
+}
+
+async function updateStoredMembershipByCnic(values: MemberFormValues) {
+  const pool = getPool();
+  const result = await pool.query<MembershipRow>(
+    `
+      update memberships
+      set
+        affirms_declaration = $1,
+        full_name = $2,
+        parent_or_spouse_name = $3,
+        residential_address = $4,
+        city = $5,
+        province = $6,
+        phone = $7,
+        email = $8,
+        confirms_eligibility = $9
+      where cnic = $10
+      returning
+        membership_number,
+        affirms_declaration,
+        cnic,
+        full_name,
+        parent_or_spouse_name,
+        residential_address,
+        city,
+        province,
+        phone,
+        email,
+        confirms_eligibility,
+        joined_on,
+        created_at
+    `,
+    [
+      values.affirmsDeclaration,
+      values.fullName,
+      values.parentOrSpouseName,
+      values.residentialAddress,
+      values.city,
+      values.province,
+      values.phone,
+      values.email,
+      values.confirmsEligibility,
+      values.cnic,
+    ],
+  );
+  const row = result.rows[0];
+
+  return row ? toMemberRecord(row) : null;
+}
+
+export async function createOrUpdateStoredMembership(
+  values: MemberFormValues,
+): Promise<MembershipSaveResult> {
+  const updated = await updateStoredMembershipByCnic(values);
+
+  if (updated) {
+    return {
+      member: updated,
+      status: "updated",
+    };
+  }
+
+  try {
+    return {
+      member: await createStoredMembership(values),
+      status: "created",
+    };
+  } catch (error) {
+    if (isCnicUniqueViolation(error)) {
+      const retryUpdate = await updateStoredMembershipByCnic(values);
+
+      if (retryUpdate) {
+        return {
+          member: retryUpdate,
+          status: "updated",
+        };
+      }
+    }
+
+    throw error;
+  }
 }
 
 export async function getStoredMembershipByNumber(membershipNumber: string) {

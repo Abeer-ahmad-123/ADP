@@ -72,7 +72,13 @@ export default async function AdminManifestoPage({
         </article>
       </section>
 
-      <AdminManifestoPanel manifesto={data.manifesto} />
+      <AdminManifestoPanel
+        manifesto={data.manifesto}
+        useDirectBlobUpload={
+          process.env.NODE_ENV === "production" &&
+          Boolean(process.env.BLOB_READ_WRITE_TOKEN)
+        }
+      />
     </AdminChrome>
   );
 }

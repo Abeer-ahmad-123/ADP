@@ -141,6 +141,8 @@ export type MediaItem = {
 };
 
 export type GalleryPhoto = {
+  groupKey?: string;
+  groupOrder?: number;
   id: number;
   imageUrl: string;
   publishedAt: string;

@@ -12,12 +12,14 @@ import {
   Users,
 } from "lucide-react";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
+import AdminHeroImageForm from "@/app/admin/_components/AdminHeroImageForm";
 import { PARTY_NAME } from "@/data/partyContent";
 import { listAdminBooks } from "@/lib/bookRepository";
 import { listContentEntries } from "@/lib/contentRepository";
 import { listPublicFeedback } from "@/lib/feedbackRepository";
 import { getManifestoDocument } from "@/lib/manifestoRepository";
 import { listStoredMemberships } from "@/lib/membershipRepository";
+import { getHeroImageSrc } from "@/lib/siteSettings";
 import {
   type AdminSearchParams,
   getAdminLoadError,
@@ -139,6 +141,7 @@ export default async function AdminDashboardPage({
   const session = await requireAdminSession();
   const params = await searchParams;
   const dashboard = await loadOverviewData();
+  const heroImageSrc = await getHeroImageSrc();
 
   return (
     <AdminChrome
@@ -190,6 +193,8 @@ export default async function AdminDashboardPage({
           <p>Admin pages are blocked in robots metadata and response headers.</p>
         </article>
       </section>
+
+      <AdminHeroImageForm heroImageSrc={heroImageSrc} />
 
       <section className="admin-section-grid">
         {ADMIN_SECTION_CARDS.map((item) => {

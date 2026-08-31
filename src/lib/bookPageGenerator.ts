@@ -94,7 +94,10 @@ function getBookPagesPaths(bookId: number) {
 }
 
 function canUseVercelBlobPages() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return (
+    process.env.NODE_ENV === "production" &&
+    Boolean(process.env.BLOB_READ_WRITE_TOKEN)
+  );
 }
 
 function getBookPagesBlobPrefix(bookId: number) {

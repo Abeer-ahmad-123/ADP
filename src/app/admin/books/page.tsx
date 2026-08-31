@@ -80,7 +80,12 @@ export default async function AdminBooksPage({
             <h2>Upload a public book</h2>
           </div>
         </div>
-        <AdminBookUploadForm />
+        <AdminBookUploadForm
+          useDirectBlobUpload={
+            process.env.NODE_ENV === "production" &&
+            Boolean(process.env.BLOB_READ_WRITE_TOKEN)
+          }
+        />
       </section>
 
       <section className="admin-panel">

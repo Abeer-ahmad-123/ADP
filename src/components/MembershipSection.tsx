@@ -136,10 +136,10 @@ export default function MembershipSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const livePreview = useMemo(() => {
-    const city = formValues.city.trim();
-    const fullName = formValues.fullName.trim();
-    const cityRegion =
-      city && formValues.province ? `${city}, ${formValues.province}` : city;
+    const city = memberRecord?.city.trim() || formValues.city.trim();
+    const fullName = memberRecord?.fullName.trim() || formValues.fullName.trim();
+    const province = memberRecord?.province || formValues.province;
+    const cityRegion = city && province ? `${city}, ${province}` : city;
 
     return {
       city: cityRegion || "Your city / tehsil",
@@ -149,7 +149,7 @@ export default function MembershipSection() {
         memberRecord?.membershipNumber ||
         createPreviewMembershipNumber(formValues.city),
     };
-  }, [formValues, memberRecord?.joinedOn, memberRecord?.membershipNumber]);
+  }, [formValues, memberRecord]);
 
   function updateField<K extends keyof MemberFormValues>(
     field: K,
@@ -192,6 +192,7 @@ export default function MembershipSection() {
       const result = (await response.json()) as {
         member?: MemberRecord;
         message?: string;
+        status?: "created" | "updated";
       };
 
       if (!response.ok || !result.member) {
@@ -202,9 +203,24 @@ export default function MembershipSection() {
         return;
       }
 
+      setFormValues({
+        affirmsDeclaration: result.member.affirmsDeclaration,
+        city: result.member.city,
+        cnic: result.member.cnic,
+        confirmsEligibility: result.member.confirmsEligibility,
+        email: result.member.email,
+        fullName: result.member.fullName,
+        parentOrSpouseName: result.member.parentOrSpouseName,
+        phone: result.member.phone,
+        province: result.member.province,
+        residentialAddress: result.member.residentialAddress,
+      });
       setMemberRecord(result.member);
       setFormMessage(
-        "Membership saved securely. Your digital card is ready to download or print.",
+        result.message ||
+          (result.status === "updated"
+            ? "Your existing membership details were updated and you can save the card."
+            : "Membership saved securely. Your digital card is ready to download or print."),
       );
     } catch {
       setMemberRecord(null);

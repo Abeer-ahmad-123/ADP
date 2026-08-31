@@ -7,13 +7,20 @@ import {
   PARTY_NAME,
   PARTY_TAGLINE,
 } from "@/data/partyContent";
+import { DEFAULT_HERO_IMAGE_SRC } from "@/lib/siteSettings";
 
-export default function HeroSection() {
+export default function HeroSection({
+  heroImageSrc = DEFAULT_HERO_IMAGE_SRC,
+}: {
+  heroImageSrc?: string;
+}) {
+  const resolvedHeroImageSrc = heroImageSrc || DEFAULT_HERO_IMAGE_SRC;
+
   return (
     <section className="hero-section">
       <Image
-        src="/civic-hero.png"
-        alt="A hopeful civic plaza scene with Pakistani architectural details and citizens gathering."
+        src={resolvedHeroImageSrc}
+        alt="Awam Dost Party civic hero image."
         fill
         priority
         className="hero-image"

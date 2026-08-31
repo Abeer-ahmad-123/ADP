@@ -1,5 +1,8 @@
 import { getAdminSessionFromRequest } from "@/lib/adminAuth";
-import { createContentEntry } from "@/lib/contentRepository";
+import {
+  createContentEntries,
+  createContentEntry,
+} from "@/lib/contentRepository";
 import {
   redirectAfterPost,
   redirectToPathAfterPost,
@@ -32,6 +35,19 @@ function readText(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
 
+function readTextList(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+}
+
+function readGalleryFiles(formData: FormData) {
+  return [...formData.getAll("files"), ...formData.getAll("file")].filter(
+    (value): value is File => value instanceof File && value.size > 0,
+  );
+}
+
 function isBlobUploadHref(value: string) {
   try {
     const url = new URL(value);
@@ -60,27 +76,61 @@ export async function POST(request: Request) {
   const kind = readText(formData, "kind");
   const title = readText(formData, "title");
   const summary = readText(formData, "summary");
-  const uploadedMediaUrl = readText(formData, "mediaUrl");
+  const uploadedMediaUrls = readTextList(formData, "mediaUrl");
 
   if (!isUploadContentKind(kind) || title.length < 2) {
     return redirectToUploadSection(request, "upload-invalid", kind);
   }
 
-  if (uploadedMediaUrl && !isBlobUploadHref(uploadedMediaUrl)) {
+  if (uploadedMediaUrls.some((url) => !isBlobUploadHref(url))) {
     return redirectToUploadSection(request, "upload-invalid", kind);
   }
 
-  let mediaUrl = "";
+  const mediaUrls: string[] = [];
 
   try {
-    mediaUrl =
-      uploadedMediaUrl ||
-      (kind === "gallery_photo"
-        ? await saveGalleryImageUpload(formData.get("file"))
-        : await saveMediaUpload({
-            file: formData.get("file"),
-            kind,
-          }));
+    if (kind === "gallery_photo") {
+      if (uploadedMediaUrls.length > 0) {
+        mediaUrls.push(...uploadedMediaUrls);
+      } else {
+        for (const file of readGalleryFiles(formData)) {
+          mediaUrls.push(await saveGalleryImageUpload(file));
+        }
+      }
+
+      if (mediaUrls.length === 0) {
+        return redirectToUploadSection(request, "upload-invalid", kind);
+      }
+
+      const groupId =
+        mediaUrls.length > 1
+          ? `${Date.now()}-${crypto.randomUUID()}`
+          : "";
+
+      await createContentEntries(
+        mediaUrls.map((mediaUrl, index) => ({
+          body: groupId ? `gallery-group:${groupId}:${index}` : "",
+          isPublished: true,
+          kind,
+          mediaUrl,
+          personRole: "",
+          summary: summary || "Public gallery photo.",
+          thumbnailUrl: "",
+          title,
+        })),
+      );
+
+      return redirectToUploadSection(request, "upload-created", kind);
+    }
+
+    const mediaUrl =
+      uploadedMediaUrls[0] ||
+      (await saveMediaUpload({
+        file: formData.get("file"),
+        kind,
+      }));
+
+    mediaUrls.push(mediaUrl);
 
     await createContentEntry({
       body: "",
@@ -88,20 +138,14 @@ export async function POST(request: Request) {
       kind,
       mediaUrl,
       personRole: "",
-      summary:
-        summary ||
-        (kind === "gallery_photo"
-          ? "Public gallery photo."
-          : "Uploaded public media file."),
+      summary: summary || "Uploaded public media file.",
       thumbnailUrl: "",
       title,
     });
 
     return redirectToUploadSection(request, "upload-created", kind);
   } catch (error) {
-    if (mediaUrl) {
-      await deletePublicUpload(mediaUrl);
-    }
+    await Promise.all(mediaUrls.map((mediaUrl) => deletePublicUpload(mediaUrl)));
 
     console.error("Admin content upload failed.", error);
 

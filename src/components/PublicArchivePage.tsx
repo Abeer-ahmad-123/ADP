@@ -2,12 +2,12 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import {
   Film,
-  Images,
   Mic2,
   Play,
   Volume2,
 } from "lucide-react";
 import AudioMessagePlayer from "@/components/AudioMessagePlayer";
+import GalleryArchiveView from "@/components/GalleryArchive";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import VideoReelPlayer from "@/components/VideoReelPlayer";
@@ -236,31 +236,7 @@ export function GalleryArchive({ photos }: { photos: GalleryPhoto[] }) {
     return <EmptyArchiveState label="No gallery photos have been published yet." />;
   }
 
-  return (
-    <div className="gallery-archive-grid">
-      {photos.map((photo, index) => (
-        <article className="gallery-photo-card" key={photo.id}>
-          <div className="gallery-photo-frame">
-            <Image
-              alt={photo.title}
-              fill
-              priority={index < 2}
-              sizes="(max-width: 760px) 92vw, (max-width: 1200px) 45vw, 360px"
-              src={photo.imageUrl}
-            />
-          </div>
-          <div className="gallery-photo-copy">
-            <p>
-              <Images aria-hidden="true" size={15} />
-              Gallery · {photo.publishedAt}
-            </p>
-            <h2>{photo.title}</h2>
-            <span className="preserve-entered-text">{photo.summary}</span>
-          </div>
-        </article>
-      ))}
-    </div>
-  );
+  return <GalleryArchiveView photos={photos} />;
 }
 
 export function MediaArchive({ items }: { items: MediaItem[] }) {

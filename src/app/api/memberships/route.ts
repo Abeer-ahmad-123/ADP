@@ -1,6 +1,5 @@
 import {
-  createStoredMembership,
-  isCnicUniqueViolation,
+  createOrUpdateStoredMembership,
   validateMembershipPayload,
 } from "@/lib/membershipRepository";
 
@@ -25,23 +24,30 @@ export async function POST(request: Request) {
   }
 
   try {
-    const member = await createStoredMembership(validation.values);
-
-    return Response.json({ member }, { status: 201 });
-  } catch (error) {
-    const isMissingDatabase =
-      error instanceof Error && error.message.includes("DATABASE_URL");
-    const isDuplicateRecord = isCnicUniqueViolation(error);
+    const result = await createOrUpdateStoredMembership(validation.values);
+    const isUpdated = result.status === "updated";
 
     return Response.json(
       {
-        message: isDuplicateRecord
-          ? "A membership record already exists for this CNIC."
-          : isMissingDatabase
-            ? "Membership database is not configured yet."
-            : "Membership could not be saved right now.",
+        member: result.member,
+        message: isUpdated
+          ? "A membership record already existed for this CNIC. Your details were updated and you can save the card."
+          : "Membership saved securely. Your digital card is ready to download or print.",
+        status: result.status,
       },
-      { status: isDuplicateRecord ? 409 : isMissingDatabase ? 503 : 500 },
+      { status: isUpdated ? 200 : 201 },
+    );
+  } catch (error) {
+    const isMissingDatabase =
+      error instanceof Error && error.message.includes("DATABASE_URL");
+
+    return Response.json(
+      {
+        message: isMissingDatabase
+          ? "Membership database is not configured yet."
+          : "Membership could not be saved right now.",
+      },
+      { status: isMissingDatabase ? 503 : 500 },
     );
   }
 }

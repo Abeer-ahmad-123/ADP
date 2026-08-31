@@ -129,6 +129,12 @@ export async function saveGalleryImageUpload(file: FormDataEntryValue | null) {
   return saveImageUpload(file, "content/gallery");
 }
 
+export async function saveHeroImageUpload(file: FormDataEntryValue | null) {
+  assertUploadFile(file);
+
+  return saveImageUpload(file, "site/hero");
+}
+
 function saveImageUpload(file: File, directory: string) {
   assertFileRules({
     allowedExtensions: [".jpg", ".jpeg", ".png", ".webp", ".gif"],
@@ -201,7 +207,10 @@ async function savePublicUpload(file: File, directory: string) {
 }
 
 function canUseVercelBlob() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return (
+    process.env.NODE_ENV === "production" &&
+    Boolean(process.env.BLOB_READ_WRITE_TOKEN)
+  );
 }
 
 async function saveBlobUpload(file: File, directory: string) {
