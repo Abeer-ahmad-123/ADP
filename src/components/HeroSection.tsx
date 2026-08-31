@@ -7,20 +7,19 @@ import {
   PARTY_NAME,
   PARTY_TAGLINE,
 } from "@/data/partyContent";
-import { DEFAULT_HERO_IMAGE_SRC } from "@/lib/siteSettings";
 
 export default function HeroSection({
-  heroImageSrc = DEFAULT_HERO_IMAGE_SRC,
+  heroFlagImageSrc = PARTY_LOGO_SRC,
 }: {
-  heroImageSrc?: string;
+  heroFlagImageSrc?: string;
 }) {
-  const resolvedHeroImageSrc = heroImageSrc || DEFAULT_HERO_IMAGE_SRC;
+  const resolvedHeroFlagImageSrc = heroFlagImageSrc || PARTY_LOGO_SRC;
 
   return (
     <section className="hero-section">
       <Image
-        src={resolvedHeroImageSrc}
-        alt="Awam Dost Party civic hero image."
+        src="/civic-hero.png"
+        alt="A hopeful civic plaza scene with Pakistani architectural details and citizens gathering."
         fill
         priority
         className="hero-image"
@@ -70,7 +69,7 @@ export default function HeroSection({
               fill
               priority
               sizes="(max-width: 980px) 76vw, 390px"
-              src={PARTY_LOGO_SRC}
+              src={resolvedHeroFlagImageSrc}
             />
           </div>
         </div>

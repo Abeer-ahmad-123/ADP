@@ -129,10 +129,10 @@ export async function saveGalleryImageUpload(file: FormDataEntryValue | null) {
   return saveImageUpload(file, "content/gallery");
 }
 
-export async function saveHeroImageUpload(file: FormDataEntryValue | null) {
+export async function saveHeroFlagImageUpload(file: FormDataEntryValue | null) {
   assertUploadFile(file);
 
-  return saveImageUpload(file, "site/hero");
+  return saveImageUpload(file, "site/hero-flag");
 }
 
 function saveImageUpload(file: File, directory: string) {

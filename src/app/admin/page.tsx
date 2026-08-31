@@ -5,7 +5,6 @@ import {
   FileText,
   Headphones,
   Images,
-  Megaphone,
   MessageSquareText,
   PlusCircle,
   ScrollText,
@@ -19,7 +18,7 @@ import { listContentEntries } from "@/lib/contentRepository";
 import { listPublicFeedback } from "@/lib/feedbackRepository";
 import { getManifestoDocument } from "@/lib/manifestoRepository";
 import { listStoredMemberships } from "@/lib/membershipRepository";
-import { getHeroImageSrc } from "@/lib/siteSettings";
+import { getHeroFlagImageSrc } from "@/lib/siteSettings";
 import {
   type AdminSearchParams,
   getAdminLoadError,
@@ -141,7 +140,7 @@ export default async function AdminDashboardPage({
   const session = await requireAdminSession();
   const params = await searchParams;
   const dashboard = await loadOverviewData();
-  const heroImageSrc = await getHeroImageSrc();
+  const heroFlagImageSrc = await getHeroFlagImageSrc();
 
   return (
     <AdminChrome
@@ -194,7 +193,7 @@ export default async function AdminDashboardPage({
         </article>
       </section>
 
-      <AdminHeroImageForm heroImageSrc={heroImageSrc} />
+      <AdminHeroImageForm heroFlagImageSrc={heroFlagImageSrc} />
 
       <section className="admin-section-grid">
         {ADMIN_SECTION_CARDS.map((item) => {

@@ -4,11 +4,11 @@ import {
   redirectToPathAfterPost,
 } from "@/lib/redirects";
 import {
-  DEFAULT_HERO_IMAGE_SRC,
-  getHeroImageSrc,
-  setHeroImageSrc,
+  DEFAULT_HERO_FLAG_IMAGE_SRC,
+  getHeroFlagImageSrc,
+  setHeroFlagImageSrc,
 } from "@/lib/siteSettings";
-import { deletePublicUpload, saveHeroImageUpload } from "@/lib/uploadStore";
+import { deletePublicUpload, saveHeroFlagImageUpload } from "@/lib/uploadStore";
 
 export const runtime = "nodejs";
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     return redirectToPathAfterPost(request, "/admin/login");
   }
 
-  let nextHeroImageSrc = "";
+  let nextHeroFlagImageSrc = "";
 
   try {
     const formData = await request.formData();
@@ -41,25 +41,25 @@ export async function POST(request: Request) {
       return redirectToAdmin(request, "hero-image-invalid");
     }
 
-    const currentHeroImageSrc = await getHeroImageSrc();
-    nextHeroImageSrc = await saveHeroImageUpload(file);
+    const currentHeroFlagImageSrc = await getHeroFlagImageSrc();
+    nextHeroFlagImageSrc = await saveHeroFlagImageUpload(file);
 
-    await setHeroImageSrc(nextHeroImageSrc);
+    await setHeroFlagImageSrc(nextHeroFlagImageSrc);
 
     if (
-      currentHeroImageSrc !== DEFAULT_HERO_IMAGE_SRC &&
-      currentHeroImageSrc !== nextHeroImageSrc
+      currentHeroFlagImageSrc !== DEFAULT_HERO_FLAG_IMAGE_SRC &&
+      currentHeroFlagImageSrc !== nextHeroFlagImageSrc
     ) {
-      await deletePublicUpload(currentHeroImageSrc);
+      await deletePublicUpload(currentHeroFlagImageSrc);
     }
 
     return redirectToAdmin(request, "hero-image-updated");
   } catch (error) {
-    if (nextHeroImageSrc) {
-      await deletePublicUpload(nextHeroImageSrc);
+    if (nextHeroFlagImageSrc) {
+      await deletePublicUpload(nextHeroFlagImageSrc);
     }
 
-    console.error("Admin hero image update failed.", error);
+    console.error("Admin hero flag image update failed.", error);
 
     return redirectToAdmin(request, "hero-image-error");
   }

@@ -5,7 +5,7 @@ import {
   createWebPageJsonLd,
   getSeoRoute,
 } from "@/lib/seo";
-import { getHeroImageSrc } from "@/lib/siteSettings";
+import { getHeroFlagImageSrc } from "@/lib/siteSettings";
 
 const route = getSeoRoute("/");
 
@@ -14,12 +14,12 @@ export const dynamic = "force-dynamic";
 export const metadata = createPageMetadata(route);
 
 export default async function Home() {
-  const heroImageSrc = await getHeroImageSrc();
+  const heroFlagImageSrc = await getHeroFlagImageSrc();
 
   return (
     <>
       <JsonLd data={createWebPageJsonLd(route)} />
-      <PartyLanding heroImageSrc={heroImageSrc} />
+      <PartyLanding heroFlagImageSrc={heroFlagImageSrc} />
     </>
   );
 }

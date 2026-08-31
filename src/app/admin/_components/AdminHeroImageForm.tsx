@@ -2,27 +2,27 @@ import NextImage from "next/image";
 import { Images } from "lucide-react";
 
 export default function AdminHeroImageForm({
-  heroImageSrc,
+  heroFlagImageSrc,
 }: {
-  heroImageSrc: string;
+  heroFlagImageSrc: string;
 }) {
   return (
     <section className="admin-panel admin-hero-image-panel" id="hero-image">
       <div className="admin-panel-heading">
         <Images aria-hidden="true" size={20} />
         <div>
-          <p>Homepage</p>
-          <h2>Hero image</h2>
+          <p>Homepage hero</p>
+          <h2>Flag image</h2>
         </div>
       </div>
 
       <div className="admin-hero-image-manager">
         <div className="admin-hero-image-preview">
           <NextImage
-            alt="Current homepage hero image"
+            alt="Current homepage hero flag image"
             fill
             sizes="(max-width: 760px) 100vw, 620px"
-            src={heroImageSrc}
+            src={heroFlagImageSrc}
           />
         </div>
 
@@ -42,7 +42,7 @@ export default function AdminHeroImageForm({
             />
           </label>
           <button className="primary-button" type="submit">
-            Update hero image
+            Update flag image
           </button>
         </form>
       </div>

@@ -1,7 +1,7 @@
 import type { QueryResultRow } from "pg";
 import { getPool } from "@/lib/postgres";
 
-export const DEFAULT_HERO_IMAGE_SRC = "/civic-hero.png";
+export const DEFAULT_HERO_FLAG_IMAGE_SRC = "/brand/awam-dost-party-logo.png";
 
 const BOOK_PDF_SETTING_KEY = "book_pdf_href";
 const HERO_IMAGE_SETTING_KEY = "hero_image_src";
@@ -52,16 +52,17 @@ export async function setBookPdfHref(value: string) {
   await setSetting(BOOK_PDF_SETTING_KEY, value);
 }
 
-export async function getHeroImageSrc() {
+export async function getHeroFlagImageSrc() {
   try {
     return (
-      (await getSetting(HERO_IMAGE_SETTING_KEY))?.value || DEFAULT_HERO_IMAGE_SRC
+      (await getSetting(HERO_IMAGE_SETTING_KEY))?.value ||
+      DEFAULT_HERO_FLAG_IMAGE_SRC
     );
   } catch {
-    return DEFAULT_HERO_IMAGE_SRC;
+    return DEFAULT_HERO_FLAG_IMAGE_SRC;
   }
 }
 
-export async function setHeroImageSrc(value: string) {
+export async function setHeroFlagImageSrc(value: string) {
   await setSetting(HERO_IMAGE_SETTING_KEY, value);
 }
