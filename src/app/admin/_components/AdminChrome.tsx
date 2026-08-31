@@ -4,6 +4,7 @@ import type { AdminSession } from "@/lib/adminAuth";
 
 const ADMIN_NAV_ITEMS = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/homepage", label: "Homepage" },
   { href: "/admin/publish", label: "Publish" },
   { href: "/admin/content?kind=news", label: "Manage Content" },
   { href: "/admin/media", label: "Media" },

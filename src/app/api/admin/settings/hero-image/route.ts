@@ -13,7 +13,7 @@ import { deletePublicUpload, saveHeroFlagImageUpload } from "@/lib/uploadStore";
 export const runtime = "nodejs";
 
 function redirectToAdmin(request: Request, status: string) {
-  const url = new URL("/admin", request.url);
+  const url = new URL("/admin/homepage", request.url);
   url.searchParams.set("status", status);
   url.hash = "hero-image";
 
