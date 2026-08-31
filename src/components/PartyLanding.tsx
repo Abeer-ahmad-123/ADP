@@ -8,14 +8,19 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
 export default function PartyLanding({
+  heroFlagCaption,
   heroFlagImageSrc,
 }: {
+  heroFlagCaption?: string;
   heroFlagImageSrc?: string;
 }) {
   return (
     <main>
       <SiteHeader />
-      <HeroSection heroFlagImageSrc={heroFlagImageSrc} />
+      <HeroSection
+        heroFlagCaption={heroFlagCaption}
+        heroFlagImageSrc={heroFlagImageSrc}
+      />
       <ApproachSection />
       <ManifestoSection />
       <MembershipSection />

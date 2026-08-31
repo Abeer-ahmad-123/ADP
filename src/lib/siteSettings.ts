@@ -4,6 +4,7 @@ import { getPool } from "@/lib/postgres";
 export const DEFAULT_HERO_FLAG_IMAGE_SRC = "/brand/awam-dost-party-logo.png";
 
 const BOOK_PDF_SETTING_KEY = "book_pdf_href";
+const HERO_FLAG_CAPTION_SETTING_KEY = "hero_flag_caption";
 const HERO_IMAGE_SETTING_KEY = "hero_image_src";
 
 type SettingRow = QueryResultRow & {
@@ -65,4 +66,16 @@ export async function getHeroFlagImageSrc() {
 
 export async function setHeroFlagImageSrc(value: string) {
   await setSetting(HERO_IMAGE_SETTING_KEY, value);
+}
+
+export async function getHeroFlagCaption() {
+  try {
+    return (await getSetting(HERO_FLAG_CAPTION_SETTING_KEY))?.value || "";
+  } catch {
+    return "";
+  }
+}
+
+export async function setHeroFlagCaption(value: string) {
+  await setSetting(HERO_FLAG_CAPTION_SETTING_KEY, value);
 }

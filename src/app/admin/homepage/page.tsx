@@ -7,7 +7,10 @@ import {
   getAdminStatusMessage,
   requireAdminSession,
 } from "@/lib/adminPage";
-import { getHeroFlagImageSrc } from "@/lib/siteSettings";
+import {
+  getHeroFlagCaption,
+  getHeroFlagImageSrc,
+} from "@/lib/siteSettings";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +25,10 @@ export default async function AdminHomepagePage({
 }) {
   const session = await requireAdminSession();
   const params = await searchParams;
-  const heroFlagImageSrc = await getHeroFlagImageSrc();
+  const [heroFlagCaption, heroFlagImageSrc] = await Promise.all([
+    getHeroFlagCaption(),
+    getHeroFlagImageSrc(),
+  ]);
 
   return (
     <AdminChrome
@@ -31,7 +37,10 @@ export default async function AdminHomepagePage({
       statusMessage={getAdminStatusMessage(params.status)}
       title="Homepage"
     >
-      <AdminHeroImageForm heroFlagImageSrc={heroFlagImageSrc} />
+      <AdminHeroImageForm
+        heroFlagCaption={heroFlagCaption}
+        heroFlagImageSrc={heroFlagImageSrc}
+      />
     </AdminChrome>
   );
 }

@@ -5,6 +5,7 @@ import {
 } from "@/lib/redirects";
 import {
   DEFAULT_HERO_FLAG_IMAGE_SRC,
+  setHeroFlagCaption,
   getHeroFlagImageSrc,
   setHeroFlagImageSrc,
 } from "@/lib/siteSettings";
@@ -24,6 +25,12 @@ function isFilledFile(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.size > 0;
 }
 
+function readCaption(formData: FormData) {
+  return String(formData.get("caption") || "")
+    .trim()
+    .slice(0, 180);
+}
+
 export async function POST(request: Request) {
   const session = getAdminSessionFromRequest(request);
 
@@ -31,22 +38,28 @@ export async function POST(request: Request) {
     return redirectToPathAfterPost(request, "/admin/login");
   }
 
-  let nextHeroFlagImageSrc = "";
+  let uploadedHeroFlagImageSrc = "";
 
   try {
     const formData = await request.formData();
     const file = formData.get("file");
-
-    if (!isFilledFile(file)) {
-      return redirectToAdmin(request, "hero-image-invalid");
-    }
+    const caption = readCaption(formData);
+    const hasNewFile = isFilledFile(file);
 
     const currentHeroFlagImageSrc = await getHeroFlagImageSrc();
-    nextHeroFlagImageSrc = await saveHeroFlagImageUpload(file);
+    const nextHeroFlagImageSrc = hasNewFile
+      ? await saveHeroFlagImageUpload(file)
+      : currentHeroFlagImageSrc;
 
-    await setHeroFlagImageSrc(nextHeroFlagImageSrc);
+    uploadedHeroFlagImageSrc = hasNewFile ? nextHeroFlagImageSrc : "";
+
+    await Promise.all([
+      setHeroFlagCaption(caption),
+      ...(hasNewFile ? [setHeroFlagImageSrc(nextHeroFlagImageSrc)] : []),
+    ]);
 
     if (
+      hasNewFile &&
       currentHeroFlagImageSrc !== DEFAULT_HERO_FLAG_IMAGE_SRC &&
       currentHeroFlagImageSrc !== nextHeroFlagImageSrc
     ) {
@@ -55,8 +68,8 @@ export async function POST(request: Request) {
 
     return redirectToAdmin(request, "hero-image-updated");
   } catch (error) {
-    if (nextHeroFlagImageSrc) {
-      await deletePublicUpload(nextHeroFlagImageSrc);
+    if (uploadedHeroFlagImageSrc) {
+      await deletePublicUpload(uploadedHeroFlagImageSrc);
     }
 
     console.error("Admin hero flag image update failed.", error);

@@ -2,8 +2,10 @@ import NextImage from "next/image";
 import { Images } from "lucide-react";
 
 export default function AdminHeroImageForm({
+  heroFlagCaption,
   heroFlagImageSrc,
 }: {
+  heroFlagCaption: string;
   heroFlagImageSrc: string;
 }) {
   return (
@@ -36,13 +38,21 @@ export default function AdminHeroImageForm({
             <span>Image file</span>
             <input
               name="file"
-              required
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
             />
           </label>
+          <label>
+            <span>Caption</span>
+            <textarea
+              name="caption"
+              defaultValue={heroFlagCaption}
+              maxLength={180}
+              rows={3}
+            />
+          </label>
           <button className="primary-button" type="submit">
-            Update flag image
+            Save hero settings
           </button>
         </form>
       </div>

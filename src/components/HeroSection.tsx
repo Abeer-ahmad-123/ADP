@@ -9,11 +9,14 @@ import {
 } from "@/data/partyContent";
 
 export default function HeroSection({
+  heroFlagCaption,
   heroFlagImageSrc = PARTY_LOGO_SRC,
 }: {
+  heroFlagCaption?: string;
   heroFlagImageSrc?: string;
 }) {
   const resolvedHeroFlagImageSrc = heroFlagImageSrc || PARTY_LOGO_SRC;
+  const resolvedHeroFlagCaption = heroFlagCaption?.trim();
 
   return (
     <section className="hero-section">
@@ -68,10 +71,13 @@ export default function HeroSection({
               alt={PARTY_LOGO_ALT}
               fill
               priority
-              sizes="(max-width: 980px) 76vw, 390px"
+              sizes="(max-width: 920px) 250px, (max-width: 1500px) 30vw, 440px"
               src={resolvedHeroFlagImageSrc}
             />
           </div>
+          {resolvedHeroFlagCaption && (
+            <p className="hero-flag-caption">{resolvedHeroFlagCaption}</p>
+          )}
         </div>
       </div>
 
