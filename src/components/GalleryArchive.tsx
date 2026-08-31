@@ -227,7 +227,11 @@ export default function GalleryArchiveView({
               </button>
             </div>
 
-            <div className="gallery-lightbox-stage">
+            <div
+              className={`gallery-lightbox-stage${
+                activeGroup.photos.length === 1 ? " is-single-photo" : ""
+              }`}
+            >
               {activeGroup.photos.length > 1 && (
                 <button
                   aria-label="Previous image"

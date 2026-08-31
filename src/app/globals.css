@@ -1891,7 +1891,17 @@ a {
   width: 100%;
 }
 
-.gallery-lightbox-topbar,
+.gallery-lightbox-topbar {
+  align-items: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.gallery-lightbox-topbar > div {
+  min-width: 0;
+}
+
 .gallery-lightbox-footer {
   align-items: center;
   display: flex;
@@ -1915,6 +1925,7 @@ a {
   font-size: clamp(21px, 3vw, 30px);
   line-height: 1.05;
   margin: 4px 0 0;
+  overflow-wrap: anywhere;
 }
 
 .gallery-lightbox-icon-button,
@@ -1943,6 +1954,10 @@ a {
   grid-template-columns: auto minmax(0, 1fr) auto;
   height: 100%;
   min-height: 0;
+}
+
+.gallery-lightbox-stage.is-single-photo {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .gallery-lightbox-image-frame {
