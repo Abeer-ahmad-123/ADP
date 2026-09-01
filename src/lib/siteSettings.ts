@@ -1,11 +1,14 @@
 import type { QueryResultRow } from "pg";
+import { PARTY_LOGO_SRC } from "@/data/partyContent";
 import { getPool } from "@/lib/postgres";
 
 export const DEFAULT_HERO_FLAG_IMAGE_SRC = "/brand/awam-dost-party-logo.png";
+export const DEFAULT_MEMBERSHIP_CARD_IMAGE_SRC = PARTY_LOGO_SRC;
 
 const BOOK_PDF_SETTING_KEY = "book_pdf_href";
 const HERO_FLAG_CAPTION_SETTING_KEY = "hero_flag_caption";
 const HERO_IMAGE_SETTING_KEY = "hero_image_src";
+const MEMBERSHIP_CARD_IMAGE_SETTING_KEY = "membership_card_image_src";
 
 type SettingRow = QueryResultRow & {
   key: string;
@@ -78,4 +81,19 @@ export async function getHeroFlagCaption() {
 
 export async function setHeroFlagCaption(value: string) {
   await setSetting(HERO_FLAG_CAPTION_SETTING_KEY, value);
+}
+
+export async function getMembershipCardImageSrc() {
+  try {
+    return (
+      (await getSetting(MEMBERSHIP_CARD_IMAGE_SETTING_KEY))?.value ||
+      DEFAULT_MEMBERSHIP_CARD_IMAGE_SRC
+    );
+  } catch {
+    return DEFAULT_MEMBERSHIP_CARD_IMAGE_SRC;
+  }
+}
+
+export async function setMembershipCardImageSrc(value: string) {
+  await setSetting(MEMBERSHIP_CARD_IMAGE_SETTING_KEY, value);
 }

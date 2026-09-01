@@ -15,6 +15,7 @@ import {
   createPreviewMembershipNumber,
   createMembershipSvg,
   downloadMembershipSvg,
+  getMembershipCardImageDataUri,
   getPartyLogoDataUri,
 } from "@/utils/memberCard";
 
@@ -129,11 +130,17 @@ function createMembershipPrintDocument(cardSvg: string) {
 </html>`;
 }
 
-export default function MembershipSection() {
+export default function MembershipSection({
+  membershipCardImageSrc = PARTY_LOGO_SRC,
+}: {
+  membershipCardImageSrc?: string;
+}) {
   const [formValues, setFormValues] = useState(INITIAL_FORM_VALUES);
   const [memberRecord, setMemberRecord] = useState<MemberRecord | null>(null);
   const [formMessage, setFormMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const resolvedMembershipCardImageSrc =
+    membershipCardImageSrc || PARTY_LOGO_SRC;
 
   const livePreview = useMemo(() => {
     const city = memberRecord?.city.trim() || formValues.city.trim();
@@ -235,7 +242,12 @@ export default function MembershipSection() {
       return;
     }
 
-    const logoHref = await getPartyLogoDataUri().catch(() => undefined);
+    const [logoHref, membershipCardImageHref] = await Promise.all([
+      getPartyLogoDataUri().catch(() => undefined),
+      getMembershipCardImageDataUri(resolvedMembershipCardImageSrc).catch(
+        () => undefined,
+      ),
+    ]);
 
     document.getElementById("membership-print-frame")?.remove();
 
@@ -273,7 +285,9 @@ export default function MembershipSection() {
 
     frameDocument.open();
     frameDocument.write(
-      createMembershipPrintDocument(createMembershipSvg(memberRecord, logoHref)),
+      createMembershipPrintDocument(
+        createMembershipSvg(memberRecord, logoHref, membershipCardImageHref),
+      ),
     );
     frameDocument.close();
 
@@ -483,21 +497,23 @@ export default function MembershipSection() {
               </div>
               <span className="card-top-logo">
                 <Image
-                  alt={PARTY_LOGO_ALT}
+                  alt="Membership card top image"
                   fill
                   sizes="(max-width: 700px) 64px, 108px"
+                  src={resolvedMembershipCardImageSrc}
+                />
+              </span>
+            </div>
+            <div className="card-number-block">
+              <span className="card-number-logo">
+                <Image
+                  alt={PARTY_LOGO_ALT}
+                  fill
+                  sizes="(max-width: 700px) 52px, 76px"
                   src={PARTY_LOGO_SRC}
                 />
                 <span className="sr-only">{PARTY_SHORT_NAME}</span>
               </span>
-            </div>
-            <div className="card-chip-row">
-              <span className="card-chip" aria-hidden="true">
-                <span />
-              </span>
-              <span className="card-validity">Member ID</span>
-            </div>
-            <div className="card-number-block">
               <p className="card-label">Membership no.</p>
               <strong>{livePreview.membershipNumber}</strong>
             </div>
@@ -523,7 +539,10 @@ export default function MembershipSection() {
               disabled={!memberRecord}
               onClick={() => {
                 if (memberRecord) {
-                  void downloadMembershipSvg(memberRecord);
+                  void downloadMembershipSvg(
+                    memberRecord,
+                    resolvedMembershipCardImageSrc,
+                  );
                 }
               }}
             >

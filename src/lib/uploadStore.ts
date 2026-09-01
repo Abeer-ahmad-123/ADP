@@ -135,6 +135,14 @@ export async function saveHeroFlagImageUpload(file: FormDataEntryValue | null) {
   return saveImageUpload(file, "site/hero-flag");
 }
 
+export async function saveMembershipCardImageUpload(
+  file: FormDataEntryValue | null,
+) {
+  assertUploadFile(file);
+
+  return saveImageUpload(file, "site/membership-card");
+}
+
 function saveImageUpload(file: File, directory: string) {
   assertFileRules({
     allowedExtensions: [".jpg", ".jpeg", ".png", ".webp", ".gif"],

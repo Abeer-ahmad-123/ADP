@@ -12,6 +12,7 @@ const ADMIN_NAV_ITEMS = [
   { href: "/admin/books", label: "Books" },
   { href: "/admin/manifesto", label: "Manifesto" },
   { href: "/admin/memberships", label: "Members" },
+  { href: "/admin/membership-card", label: "Membership Card" },
   { href: "/admin/feedback", label: "Feedback" },
 ];
 

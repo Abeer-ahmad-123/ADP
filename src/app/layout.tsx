@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import AnnouncementPopup from "@/components/AnnouncementPopup";
 import JsonLd from "@/components/JsonLd";
 import {
   PARTY_LOGO_ALT,
@@ -7,7 +6,6 @@ import {
   PARTY_NAME,
   PARTY_TAGLINE,
 } from "@/data/partyContent";
-import { getLatestAnnouncement } from "@/lib/contentRepository";
 import {
   createRootJsonLd,
   SITE_URL,
@@ -67,18 +65,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const latestAnnouncement = await getLatestAnnouncement();
-
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
         <JsonLd data={createRootJsonLd()} />
-        <AnnouncementPopup latestAnnouncement={latestAnnouncement} />
         {children}
       </body>
     </html>

@@ -126,11 +126,17 @@ function getDefaultLogoHref() {
     : new URL(PARTY_LOGO_SRC, window.location.origin).href;
 }
 
-export async function getPartyLogoDataUri() {
-  const response = await fetch(PARTY_LOGO_SRC);
+function getAbsoluteImageHref(src: string) {
+  return typeof window === "undefined"
+    ? src
+    : new URL(src, window.location.origin).href;
+}
+
+async function getImageDataUri(src: string, loadErrorMessage: string) {
+  const response = await fetch(getAbsoluteImageHref(src));
 
   if (!response.ok) {
-    throw new Error("Party logo could not be loaded.");
+    throw new Error(loadErrorMessage);
   }
 
   const blob = await response.blob();
@@ -152,9 +158,21 @@ export async function getPartyLogoDataUri() {
   });
 }
 
+export async function getPartyLogoDataUri() {
+  return getImageDataUri(PARTY_LOGO_SRC, "Party logo could not be loaded.");
+}
+
+export async function getMembershipCardImageDataUri(src: string) {
+  return getImageDataUri(
+    src || PARTY_LOGO_SRC,
+    "Membership card image could not be loaded.",
+  );
+}
+
 export function createMembershipSvg(
   record: MemberRecord,
   logoHref = getDefaultLogoHref(),
+  cardImageHref = logoHref,
 ) {
   const nameLines = splitSvgLines(record.fullName, 28, 2);
   const memberNumberLines = splitSvgLines(record.membershipNumber, 34, 1);
@@ -174,6 +192,9 @@ export function createMembershipSvg(
     </clipPath>
     <clipPath id="card_logo_clip">
       <rect x="664" y="54" width="128" height="96" rx="18"/>
+    </clipPath>
+    <clipPath id="card_number_logo_clip">
+      <rect x="64" y="160" width="100" height="74" rx="16"/>
     </clipPath>
     <linearGradient id="card_base" x1="24" y1="24" x2="832" y2="516" gradientUnits="userSpaceOnUse">
       <stop stop-color="#03170F"/>
@@ -207,16 +228,14 @@ export function createMembershipSvg(
     <path d="M24 420C160 374 274 416 412 382C562 346 674 362 832 304V516H24V420Z" fill="#000000" opacity="0.13"/>
   </g>
   <rect x="24.5" y="24.5" width="807" height="491" rx="27.5" stroke="#D8A235" stroke-opacity="0.34"/>
-  <image href="${escapeXml(logoHref)}" x="664" y="54" width="128" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#card_logo_clip)"/>
+  <image href="${escapeXml(cardImageHref)}" x="664" y="54" width="128" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#card_logo_clip)"/>
   <rect x="664.5" y="54.5" width="127" height="95" rx="17.5" stroke="#D8A235" stroke-opacity="0.64"/>
   <text x="64" y="76" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="950">${escapeXml(PARTY_NAME)}</text>
   <text x="64" y="108" fill="#D8A235" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="900">DIGITAL MEMBERSHIP CARD</text>
-  <rect x="64" y="178" width="64" height="46" rx="8" fill="#E9C96E" stroke="#FFFFFF" stroke-opacity="0.28"/>
-  <path d="M64 201H128M96 178V224M76 178V224M116 178V224" stroke="#071814" stroke-opacity="0.22"/>
-  <rect x="80" y="190" width="32" height="22" rx="11" stroke="#071814" stroke-opacity="0.24"/>
-  <text x="736" y="210" fill="#FFFFFF" fill-opacity="0.74" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="900" text-anchor="middle">MEMBER ID</text>
-  <text x="64" y="286" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">MEMBERSHIP NO.</text>
-  <text x="64" y="326" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="950">${renderSvgLines(memberNumberLines, { x: 64, lineHeight: 32 })}</text>
+  <image href="${escapeXml(logoHref)}" x="64" y="160" width="100" height="74" preserveAspectRatio="xMidYMid meet" clip-path="url(#card_number_logo_clip)"/>
+  <rect x="64.5" y="160.5" width="99" height="73" rx="15.5" stroke="#D8A235" stroke-opacity="0.44"/>
+  <text x="64" y="274" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="900">MEMBERSHIP NO.</text>
+  <text x="64" y="314" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="950">${renderSvgLines(memberNumberLines, { x: 64, lineHeight: 32 })}</text>
   <text x="64" y="416" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="900">MEMBER NAME</text>
   <text x="64" y="452" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="950">${renderSvgLines(nameLines, { x: 64, lineHeight: 27 })}</text>
   <text x="392" y="416" fill="#D8A235" fill-opacity="0.9" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="900">JOINED</text>
@@ -227,9 +246,17 @@ export function createMembershipSvg(
 </svg>`;
 }
 
-export async function downloadMembershipSvg(record: MemberRecord) {
-  const logoHref = await getPartyLogoDataUri().catch(() => getDefaultLogoHref());
-  const blob = new Blob([createMembershipSvg(record, logoHref)], {
+export async function downloadMembershipSvg(
+  record: MemberRecord,
+  membershipCardImageSrc = PARTY_LOGO_SRC,
+) {
+  const [logoHref, cardImageHref] = await Promise.all([
+    getPartyLogoDataUri().catch(() => getDefaultLogoHref()),
+    getMembershipCardImageDataUri(membershipCardImageSrc).catch(() =>
+      getDefaultLogoHref(),
+    ),
+  ]);
+  const blob = new Blob([createMembershipSvg(record, logoHref, cardImageHref)], {
     type: "image/svg+xml;charset=utf-8",
   });
   const url = URL.createObjectURL(blob);

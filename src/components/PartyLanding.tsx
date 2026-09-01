@@ -10,9 +10,11 @@ import SiteHeader from "@/components/SiteHeader";
 export default function PartyLanding({
   heroFlagCaption,
   heroFlagImageSrc,
+  membershipCardImageSrc,
 }: {
   heroFlagCaption?: string;
   heroFlagImageSrc?: string;
+  membershipCardImageSrc?: string;
 }) {
   return (
     <main>
@@ -23,7 +25,7 @@ export default function PartyLanding({
       />
       <ApproachSection />
       <ManifestoSection />
-      <MembershipSection />
+      <MembershipSection membershipCardImageSrc={membershipCardImageSrc} />
       <BookSection />
       <FeedbackForm />
       <SiteFooter />

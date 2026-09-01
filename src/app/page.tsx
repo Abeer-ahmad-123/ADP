@@ -8,6 +8,7 @@ import {
 import {
   getHeroFlagCaption,
   getHeroFlagImageSrc,
+  getMembershipCardImageSrc,
 } from "@/lib/siteSettings";
 
 const route = getSeoRoute("/");
@@ -17,10 +18,12 @@ export const dynamic = "force-dynamic";
 export const metadata = createPageMetadata(route);
 
 export default async function Home() {
-  const [heroFlagCaption, heroFlagImageSrc] = await Promise.all([
-    getHeroFlagCaption(),
-    getHeroFlagImageSrc(),
-  ]);
+  const [heroFlagCaption, heroFlagImageSrc, membershipCardImageSrc] =
+    await Promise.all([
+      getHeroFlagCaption(),
+      getHeroFlagImageSrc(),
+      getMembershipCardImageSrc(),
+    ]);
 
   return (
     <>
@@ -28,6 +31,7 @@ export default async function Home() {
       <PartyLanding
         heroFlagCaption={heroFlagCaption}
         heroFlagImageSrc={heroFlagImageSrc}
+        membershipCardImageSrc={membershipCardImageSrc}
       />
     </>
   );

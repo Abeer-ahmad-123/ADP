@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   BookOpen,
+  CreditCard,
   FileText,
   Headphones,
   Images,
@@ -120,6 +121,13 @@ const ADMIN_SECTION_CARDS = [
     kicker: "Records",
     summary: "View, edit, delete, and export membership registrations.",
     title: "Membership records",
+  },
+  {
+    href: "/admin/membership-card",
+    icon: CreditCard,
+    kicker: "Card",
+    summary: "Upload the image shown on generated membership cards.",
+    title: "Membership card",
   },
   {
     href: "/admin/feedback",
