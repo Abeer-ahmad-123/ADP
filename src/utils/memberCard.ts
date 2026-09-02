@@ -21,6 +21,12 @@ function getCityCode(city: string) {
   return normalized || FALLBACK_CITY_CODE;
 }
 
+function formatLocation(city: string, province: string) {
+  return (
+    [city.trim(), province.trim()].filter(Boolean).join(", ") || "Not provided"
+  );
+}
+
 function splitSvgLines(value: string, maxChars: number, maxLines: number) {
   const words = value.trim().replaceAll("-", "- ").split(/\s+/);
   const lines: string[] = [];
@@ -96,8 +102,11 @@ function createRandomSerial(length: number) {
 
 export function createMembershipNumber(values: MemberFormValues) {
   const serial = createRandomSerial(10);
+  const cityCode = getCityCode(values.city);
 
-  return `${PARTY_SHORT_NAME}-PK-${getCityCode(values.city)}-${serial}`;
+  return cityCode === FALLBACK_CITY_CODE
+    ? `${PARTY_SHORT_NAME}-PK-${serial}`
+    : `${PARTY_SHORT_NAME}-PK-${cityCode}-${serial}`;
 }
 
 export function createPreviewMembershipNumber(city: string) {
@@ -177,7 +186,7 @@ export function createMembershipSvg(
   const nameLines = splitSvgLines(record.fullName, 28, 2);
   const memberNumberLines = splitSvgLines(record.membershipNumber, 34, 1);
   const cityLines = splitSvgLines(
-    `${record.city}, ${record.province}`,
+    formatLocation(record.city, record.province),
     28,
     1,
   );

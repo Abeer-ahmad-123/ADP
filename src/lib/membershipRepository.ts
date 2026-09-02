@@ -181,11 +181,11 @@ export function validateMembershipPayload(
     return { ok: false, message: "Please enter a valid residential address." };
   }
 
-  if (values.city.length < 2 || values.city.length > 80) {
+  if (values.city && (values.city.length < 2 || values.city.length > 80)) {
     return { ok: false, message: "Please enter a valid city or tehsil." };
   }
 
-  if (!PROVINCES.includes(values.province)) {
+  if (values.province && !PROVINCES.includes(values.province)) {
     return { ok: false, message: "Please choose a valid province or region." };
   }
 

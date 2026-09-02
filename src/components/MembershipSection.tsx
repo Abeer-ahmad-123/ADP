@@ -146,7 +146,8 @@ export default function MembershipSection({
     const city = memberRecord?.city.trim() || formValues.city.trim();
     const fullName = memberRecord?.fullName.trim() || formValues.fullName.trim();
     const province = memberRecord?.province || formValues.province;
-    const cityRegion = city && province ? `${city}, ${province}` : city;
+    const cityRegion =
+      [city, province].filter(Boolean).join(", ") || "Not provided";
 
     return {
       city: cityRegion || "Your city / tehsil",
@@ -385,9 +386,8 @@ export default function MembershipSection({
           </label>
 
           <label className="form-field">
-            <span>City / Tehsil</span>
+            <span>City / Tehsil (optional)</span>
             <input
-              required
               value={formValues.city}
               onChange={(event) => updateField("city", event.target.value)}
               placeholder="Lahore"
@@ -395,14 +395,13 @@ export default function MembershipSection({
           </label>
 
           <label className="form-field">
-            <span>Province</span>
+            <span>Province (optional)</span>
             <select
-              required
               value={formValues.province}
               onChange={(event) => updateField("province", event.target.value)}
             >
-              <option value="" disabled>
-                Select province
+              <option value="">
+                No province selected
               </option>
               {PROVINCES.map((province) => (
                 <option key={province} value={province}>

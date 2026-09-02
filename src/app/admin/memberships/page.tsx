@@ -42,6 +42,12 @@ async function loadMembershipData() {
   }
 }
 
+function formatMemberLocation(member: MembershipAdminRecord) {
+  return (
+    [member.city, member.province].filter(Boolean).join(", ") || "Not provided"
+  );
+}
+
 export default async function AdminMembershipsPage({
   searchParams,
 }: {
@@ -107,9 +113,7 @@ export default async function AdminMembershipsPage({
                     {member.email && <span>{member.email}</span>}
                   </td>
                   <td>{member.cnic}</td>
-                  <td>
-                    {member.city}, {member.province}
-                  </td>
+                  <td>{formatMemberLocation(member)}</td>
                   <td>{member.phone}</td>
                   <td>{member.membershipNumber}</td>
                   <td>{member.joinedOn}</td>
@@ -171,15 +175,15 @@ export default async function AdminMembershipsPage({
                             </label>
                             <label>
                               <span>City / tehsil</span>
-                              <input name="city" required defaultValue={member.city} />
+                              <input name="city" defaultValue={member.city} />
                             </label>
                             <label>
                               <span>Province</span>
                               <select
                                 name="province"
-                                required
                                 defaultValue={member.province}
                               >
+                                <option value="">No province selected</option>
                                 {PROVINCES.map((province) => (
                                   <option key={province} value={province}>
                                     {province}
