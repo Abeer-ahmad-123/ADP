@@ -80,6 +80,33 @@ curl -H "Authorization: Bearer $ADMIN_EXPORT_TOKEN" \
 Do not publish admin credentials, the session secret, or the export token.
 Public visitors do not need login to read the book or browse public content.
 
+## Google Analytics
+
+Create a Google Analytics 4 web data stream for the site, then add its
+measurement ID to `.env.local` (and to the production deployment environment):
+
+```bash
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+```
+
+Restart the development server or redeploy after setting the variable. Keep
+Enhanced Measurement enabled in the GA4 web stream, including page changes
+based on browser history events, so App Router navigations are counted as page
+views.
+
+The integration records public link and button interactions as `ui_click`
+events. To make the event details available as reusable GA4 report dimensions,
+register these event-scoped custom dimensions in Google Analytics:
+
+- `click_text` — the visible or accessible label
+- `click_target` — the destination path or control identifier
+- `click_type` — link, button, or ARIA role
+- `click_section` — the nearest page section
+- `page_path` — the public route where the click happened
+
+Admin clicks are excluded from `ui_click` events. Query strings, form values,
+email addresses, and phone numbers are not included in custom click parameters.
+
 ## Checks
 
 ```bash

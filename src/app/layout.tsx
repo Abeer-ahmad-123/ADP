@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import GoogleAnalyticsEvents from "@/components/GoogleAnalyticsEvents";
 import JsonLd from "@/components/JsonLd";
 import {
   PARTY_LOGO_ALT,
@@ -70,12 +72,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const googleAnalyticsId =
+    process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID?.trim();
+
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
         <JsonLd data={createRootJsonLd()} />
         {children}
       </body>
+      {googleAnalyticsId ? (
+        <>
+          <GoogleAnalyticsEvents />
+          <GoogleAnalytics gaId={googleAnalyticsId} />
+        </>
+      ) : null}
     </html>
   );
 }
