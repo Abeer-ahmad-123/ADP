@@ -2315,7 +2315,8 @@ a {
 }
 
 .video-preview-meta-row > span,
-.video-audio-button {
+.video-player-actions,
+.video-player-option-button {
   align-items: center;
   display: inline-flex;
 }
@@ -2324,7 +2325,11 @@ a {
   gap: 8px;
 }
 
-.video-audio-button {
+.video-player-actions {
+  gap: 6px;
+}
+
+.video-player-option-button {
   appearance: none;
   background: rgba(251, 255, 248, 0.16);
   border: 1px solid rgba(251, 255, 248, 0.3);
@@ -2337,7 +2342,13 @@ a {
   width: 32px;
 }
 
-.video-audio-button:focus-visible {
+.video-player-option-button[aria-pressed="true"] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+.video-player-option-button:focus-visible {
   outline: 3px solid rgba(216, 162, 53, 0.7);
   outline-offset: 2px;
 }

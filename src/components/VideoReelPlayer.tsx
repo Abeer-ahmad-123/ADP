@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { Film, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Film, Pause, Play, Repeat, Volume2, VolumeX } from "lucide-react";
 
 type VideoReelPlayerProps = {
   durationLabel: string;
@@ -22,6 +22,7 @@ export default function VideoReelPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const shouldKeepPlayingRef = useRef(true);
   const [duration, setDuration] = useState(0);
+  const [isLooping, setIsLooping] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -149,6 +150,7 @@ export default function VideoReelPlayer({
     >
       <video
         autoPlay
+        loop={isLooping}
         muted
         ref={videoRef}
         onClick={togglePlayback}
@@ -191,18 +193,30 @@ export default function VideoReelPlayer({
             <Film aria-hidden="true" size={15} />
             <strong>{durationLabel}</strong>
           </span>
-          <button
-            aria-label={`${isMuted ? "Unmute" : "Mute"} ${title}`}
-            className="video-audio-button"
-            onClick={toggleMuted}
-            type="button"
-          >
-            {isMuted ? (
-              <VolumeX aria-hidden="true" size={16} />
-            ) : (
-              <Volume2 aria-hidden="true" size={16} />
-            )}
-          </button>
+          <div className="video-player-actions">
+            <button
+              aria-label={`${isMuted ? "Unmute" : "Mute"} ${title}`}
+              aria-pressed={!isMuted}
+              className="video-player-option-button"
+              onClick={toggleMuted}
+              type="button"
+            >
+              {isMuted ? (
+                <VolumeX aria-hidden="true" size={16} />
+              ) : (
+                <Volume2 aria-hidden="true" size={16} />
+              )}
+            </button>
+            <button
+              aria-label={`${isLooping ? "Disable" : "Enable"} loop for ${title}`}
+              aria-pressed={isLooping}
+              className="video-player-option-button"
+              onClick={() => setIsLooping((current) => !current)}
+              type="button"
+            >
+              <Repeat aria-hidden="true" size={16} />
+            </button>
+          </div>
         </div>
         <label className="video-timeline">
           <span className="sr-only">Seek {title}</span>
