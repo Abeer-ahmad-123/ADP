@@ -6,7 +6,7 @@ import { type FormEvent, useState } from "react";
 
 type MediaKind = "audio" | "video_reel";
 
-const MAX_MEDIA_UPLOAD_BYTES = 1024 * 1024 * 1024;
+const MAX_MEDIA_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
 
 function sanitizeFilename(value: string) {
   const fallback = "media-upload";
@@ -72,7 +72,7 @@ export default function AdminMediaUploadForm({
     }
 
     if (file.size > MAX_MEDIA_UPLOAD_BYTES) {
-      setError("Media uploads must be 1 GB or smaller.");
+      setError("Media uploads must be 2 GB or smaller.");
       return;
     }
 

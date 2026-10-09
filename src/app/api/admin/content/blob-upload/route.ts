@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getAdminSessionFromRequest } from "@/lib/adminAuth";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
-const MAX_MEDIA_UPLOAD_BYTES = 1024 * 1024 * 1024;
+const MAX_MEDIA_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
 const GALLERY_IMAGE_TYPES = [
   "image/gif",
   "image/jpeg",
