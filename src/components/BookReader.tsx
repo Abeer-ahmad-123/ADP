@@ -2,10 +2,8 @@
 
 import {
   type AnimationEvent,
-  useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import Image from "next/image";
@@ -15,6 +13,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import type { BookSpread } from "@/types/party";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 type TurnDirection = "next" | "previous" | null;
 
@@ -69,7 +68,7 @@ function renderBookPage(
       height={BOOK_PAGE_IMAGE_HEIGHT}
       priority={page.pageNumber <= 4}
       sizes={BOOK_PAGE_IMAGE_SIZES}
-      src={page.imageSrc}
+      src={getUncachedAssetHref(page.imageSrc)}
       width={BOOK_PAGE_IMAGE_WIDTH}
     />
   ) : null;
@@ -111,26 +110,10 @@ export default function BookReader({
   title,
 }: BookReaderProps) {
   const [pageIndex, setPageIndex] = useState(0);
-  const [pendingTurn, setPendingTurn] = useState<BookTurn | null>(null);
   const [turn, setTurn] = useState<BookTurn | null>(null);
-  const pendingTurnRef = useRef<BookTurn | null>(null);
-  const preloadedPageImagesRef = useRef<Set<string>>(new Set());
-  const preloadContainerRef = useRef<HTMLDivElement | null>(null);
-  const turnRef = useRef<BookTurn | null>(null);
   const isMobileBook = useMediaQuery("(max-width: 700px)");
   const pageStep = isMobileBook ? 1 : 2;
   const hasPages = pages.length > 0;
-  const pageImageSources = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          pages
-            .map((page) => page.imageSrc)
-            .filter((source): source is string => Boolean(source)),
-        ),
-      ),
-    [pages],
-  );
   const maxStartIndex = useMemo(() => {
     if (pages.length <= 1) {
       return 0;
@@ -163,96 +146,26 @@ export default function BookReader({
   const incomingTurningPage = turn
     ? isMobileBook
       ? targetMobilePage
-        : turn.direction === "next"
-          ? targetLeftPage
-          : targetRightPage
+      : turn.direction === "next"
+        ? targetLeftPage
+        : targetRightPage
     : currentMobilePage;
   const isFirstSpread = safePageIndex === 0;
   const isLastSpread = safePageIndex >= maxStartIndex;
-  const isPreparingTurn = Boolean(pendingTurn);
   const isTurning = Boolean(turn);
-  const isReaderBusy = isTurning || isPreparingTurn;
-
-  const arePagesReadyForIndex = useCallback(
-    (
-      targetIndex: number,
-      loadedImages: Set<string> = preloadedPageImagesRef.current,
-    ) => {
-      const isPageReady = (page: BookSpread | undefined) =>
-        !page?.imageSrc || loadedImages.has(page.imageSrc);
-
-      if (isMobileBook) {
-        return isPageReady(pages[targetIndex]);
-      }
-
-      const targetLeft = pages[targetIndex];
-      const targetRight = pages[targetIndex + 1] ?? targetLeft;
-
-      return isPageReady(targetLeft) && isPageReady(targetRight);
-    },
-    [isMobileBook, pages],
-  );
-
-  const markPageImageLoaded = useCallback(
-    (source: string) => {
-      const loadedImages = preloadedPageImagesRef.current;
-      loadedImages.add(source);
-
-      const waitingTurn = pendingTurnRef.current;
-      if (
-        waitingTurn &&
-        !turnRef.current &&
-        arePagesReadyForIndex(waitingTurn.targetIndex, loadedImages)
-      ) {
-        pendingTurnRef.current = null;
-        turnRef.current = waitingTurn;
-        setTurn(waitingTurn);
-        setPendingTurn(null);
-      }
-    },
-    [arePagesReadyForIndex],
-  );
-
-  const syncCompletePreloadImages = useCallback(() => {
-    preloadContainerRef.current
-      ?.querySelectorAll<HTMLImageElement>("img[data-book-preload-src]")
-      .forEach((image) => {
-        const source = image.dataset.bookPreloadSrc;
-
-        if (source && image.complete) {
-          markPageImageLoaded(source);
-        }
-      });
-  }, [markPageImageLoaded]);
-
-  useEffect(() => {
-    pendingTurnRef.current = pendingTurn;
-  }, [pendingTurn]);
-
-  useEffect(() => {
-    turnRef.current = turn;
-  }, [turn]);
-
-  useEffect(() => {
-    syncCompletePreloadImages();
-  }, [pageImageSources, syncCompletePreloadImages]);
+  const isReaderBusy = isTurning;
 
   const spreadLabel = useMemo(
     () => {
-      if (pendingTurn) {
-        return "Preparing pages...";
-      }
-
       return !hasPages
         ? "No pages"
         : isMobileBook
-        ? `Page ${targetMobilePage.pageNumber}`
-        : `Pages ${targetLeftPage.pageNumber}-${targetRightPage.pageNumber}`;
+          ? `Page ${targetMobilePage.pageNumber}`
+          : `Pages ${targetLeftPage.pageNumber}-${targetRightPage.pageNumber}`;
     },
     [
       hasPages,
       isMobileBook,
-      pendingTurn,
       targetLeftPage?.pageNumber,
       targetMobilePage?.pageNumber,
       targetRightPage?.pageNumber,
@@ -260,15 +173,7 @@ export default function BookReader({
   );
 
   function requestTurn(nextTurn: BookTurn) {
-    if (arePagesReadyForIndex(nextTurn.targetIndex)) {
-      turnRef.current = nextTurn;
-      setTurn(nextTurn);
-      return;
-    }
-
-    pendingTurnRef.current = nextTurn;
-    setPendingTurn(nextTurn);
-    syncCompletePreloadImages();
+    setTurn(nextTurn);
   }
 
   function goNext() {
@@ -318,38 +223,11 @@ export default function BookReader({
     }
 
     setPageIndex(turn.targetIndex);
-    turnRef.current = null;
     setTurn(null);
   }
 
   return (
     <div className={`${compact ? "book-shell compact" : "book-shell"} pdf-book`}>
-      {pageImageSources.length > 0 && (
-        <div
-          aria-hidden="true"
-          className="book-preload-cache"
-          ref={preloadContainerRef}
-        >
-          {pageImageSources.map((source) => (
-            <Image
-              alt=""
-              className="book-preload-image"
-              data-book-preload-src={source}
-              draggable={false}
-              fetchPriority="low"
-              height={BOOK_PAGE_IMAGE_HEIGHT}
-              key={source}
-              loading="eager"
-              onError={() => markPageImageLoaded(source)}
-              onLoad={() => markPageImageLoaded(source)}
-              sizes={BOOK_PAGE_IMAGE_SIZES}
-              src={source}
-              width={BOOK_PAGE_IMAGE_WIDTH}
-            />
-          ))}
-        </div>
-      )}
-
       <div className="book-toolbar">
         <div>
           <p className="eyebrow">Party book</p>

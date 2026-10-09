@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { FileText, PlusCircle } from "lucide-react";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminPublishForm from "@/components/AdminPublishForm";

@@ -18,6 +18,7 @@ import type {
   MediaItem,
   PublicContentItem,
 } from "@/types/party";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 type PublicArchivePageProps = {
   eyebrow: string;
@@ -76,7 +77,7 @@ function MediaPreview({ item }: { item: MediaItem }) {
       return (
         <AudioMessagePlayer
           durationLabel={item.duration || "Audio message"}
-          src={item.mediaUrl}
+          src={getUncachedAssetHref(item.mediaUrl)}
           title={item.title}
         />
       );
@@ -103,8 +104,8 @@ function MediaPreview({ item }: { item: MediaItem }) {
     return (
       <VideoReelPlayer
         durationLabel={item.duration || "Video reel"}
-        poster={item.thumbnailUrl}
-        src={item.mediaUrl}
+        poster={getUncachedAssetHref(item.thumbnailUrl)}
+        src={getUncachedAssetHref(item.mediaUrl)}
         title={item.title}
       />
     );
@@ -216,7 +217,7 @@ export function LeadershipArchive({
                 alt=""
                 fill
                 sizes="70px"
-                src={profile.imageUrl}
+                src={getUncachedAssetHref(profile.imageUrl)}
               />
             ) : (
               getInitials(profile.name)

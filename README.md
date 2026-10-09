@@ -32,6 +32,40 @@ Public pages:
 The book reader loads its page text and PDF download URL from Postgres. Upload
 or update the public PDF from the admin dashboard.
 
+## Strict no-cache Blob mode
+
+For guaranteed origin reads from Vercel Blob, connect the project to a
+**private** Blob store and set this in every deployed environment:
+
+```bash
+BLOB_STORE_ACCESS=private
+```
+
+Existing files in a public Blob store must be migrated or re-uploaded into the
+private store. Vercel does not provide a guaranteed CDN-cache bypass for public
+Blob stores. The application proxies all Blob delivery with browser/CDN
+`no-store` headers; private Blob reads additionally use Vercel's `cache=0`
+origin bypass.
+
+Audit source code on its own, or include live database references:
+
+```bash
+npm run audit:cache
+npm run audit:cache:database
+```
+
+If the database audit reports public Blob URLs, first connect a private Blob
+store and place its token in `BLOB_READ_WRITE_TOKEN`. Preview and then run the
+transactional migration:
+
+```bash
+npm run blob:migrate-private
+npm run blob:migrate-private -- --apply
+npm run audit:cache:database
+```
+
+The source audit also runs automatically before every production build.
+
 ## Postgres Setup
 
 Create a database and set `DATABASE_URL` in `.env.local`.

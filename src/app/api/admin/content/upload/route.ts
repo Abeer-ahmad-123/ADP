@@ -12,6 +12,7 @@ import {
   saveGalleryImageUpload,
   saveMediaUpload,
 } from "@/lib/uploadStore";
+import { isPrivateVercelBlobUrl } from "@/lib/uncachedAsset";
 import type { ContentKind } from "@/types/party";
 
 export const runtime = "nodejs";
@@ -49,16 +50,7 @@ function readGalleryFiles(formData: FormData) {
 }
 
 function isBlobUploadHref(value: string) {
-  try {
-    const url = new URL(value);
-
-    return (
-      url.protocol === "https:" &&
-      url.hostname.endsWith(".blob.vercel-storage.com")
-    );
-  } catch {
-    return false;
-  }
+  return isPrivateVercelBlobUrl(value);
 }
 
 function isUploadContentKind(value: string): value is UploadContentKind {

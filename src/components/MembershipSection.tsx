@@ -18,6 +18,7 @@ import {
   getMembershipCardImageDataUri,
   getPartyLogoDataUri,
 } from "@/utils/memberCard";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 const INITIAL_FORM_VALUES: MemberFormValues = {
   affirmsDeclaration: false,
@@ -192,8 +193,11 @@ export default function MembershipSection({
     try {
       const response = await fetch("/api/memberships", {
         body: JSON.stringify(payload),
+        cache: "no-store",
         headers: {
+          "Cache-Control": "no-cache, no-store, max-age=0",
           "Content-Type": "application/json",
+          Pragma: "no-cache",
         },
         method: "POST",
       });
@@ -499,7 +503,7 @@ export default function MembershipSection({
                   alt="Membership card top image"
                   fill
                   sizes="(max-width: 700px) 64px, 108px"
-                  src={resolvedMembershipCardImageSrc}
+                  src={getUncachedAssetHref(resolvedMembershipCardImageSrc)}
                 />
               </span>
             </div>

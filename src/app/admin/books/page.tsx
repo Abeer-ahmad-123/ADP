@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { Edit3, FileUp, RefreshCw } from "lucide-react";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminBookUploadForm from "@/components/AdminBookUploadForm";
 import AdminDeleteBookForm from "@/components/AdminDeleteBookForm";
 import { listAdminBooks } from "@/lib/bookRepository";
+import { getBlobAccess } from "@/lib/blobConfig";
 import {
   type AdminSearchParams,
   getAdminLoadError,
@@ -12,6 +13,7 @@ import {
   requireAdminSession,
 } from "@/lib/adminPage";
 import type { PublicBookSummary } from "@/types/party";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +83,7 @@ export default async function AdminBooksPage({
           </div>
         </div>
         <AdminBookUploadForm
+          blobAccess={getBlobAccess()}
           useDirectBlobUpload={
             process.env.NODE_ENV === "production" &&
             Boolean(process.env.BLOB_READ_WRITE_TOKEN)
@@ -131,7 +134,11 @@ export default async function AdminBooksPage({
                   </td>
                   <td>
                     {book.pdfHref ? (
-                      <Link href={book.pdfHref} target="_blank" rel="noreferrer">
+                      <Link
+                        href={getUncachedAssetHref(book.pdfHref)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         View PDF
                       </Link>
                     ) : (

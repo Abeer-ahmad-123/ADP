@@ -3,6 +3,7 @@
 import { upload } from "@vercel/blob/client";
 import { FileUp } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import type { BlobAccess } from "@/lib/blobConfig";
 
 type MediaKind = "audio" | "video_reel";
 
@@ -36,8 +37,10 @@ function getFallbackContentType(kind: MediaKind) {
 }
 
 export default function AdminMediaUploadForm({
+  blobAccess,
   useDirectBlobUpload,
 }: {
+  blobAccess: BlobAccess;
   useDirectBlobUpload: boolean;
 }) {
   const [error, setError] = useState("");
@@ -86,7 +89,7 @@ export default function AdminMediaUploadForm({
         `media/${kind}/${Date.now()}-${sanitizeFilename(file.name)}`,
         file,
         {
-          access: "public",
+          access: blobAccess,
           contentType: file.type || getFallbackContentType(kind),
           handleUploadUrl: "/api/admin/content/blob-upload",
           multipart: true,
@@ -107,6 +110,7 @@ export default function AdminMediaUploadForm({
 
       const response = await fetch("/api/admin/content/upload", {
         body: createFormData,
+        cache: "no-store",
         method: "POST",
       });
 

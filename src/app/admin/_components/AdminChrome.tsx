@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { LogOut } from "lucide-react";
 import type { AdminSession } from "@/lib/adminAuth";
 

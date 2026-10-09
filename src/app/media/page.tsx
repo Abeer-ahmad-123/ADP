@@ -10,6 +10,7 @@ import {
   createWebPageJsonLd,
   getSeoRoute,
 } from "@/lib/seo";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +35,15 @@ export default async function MediaPage() {
                 "@type": item.kind === "Audio" ? "AudioObject" : "VideoObject",
                 description: item.summary,
                 name: item.title,
-                ...(item.mediaUrl ? { contentUrl: absoluteUrl(item.mediaUrl) } : {}),
+                ...(item.mediaUrl
+                  ? { contentUrl: absoluteUrl(getUncachedAssetHref(item.mediaUrl)) }
+                  : {}),
                 ...(item.thumbnailUrl
-                  ? { thumbnailUrl: absoluteUrl(item.thumbnailUrl) }
+                  ? {
+                      thumbnailUrl: absoluteUrl(
+                        getUncachedAssetHref(item.thumbnailUrl),
+                      ),
+                    }
                   : {}),
               },
               position: index + 1,

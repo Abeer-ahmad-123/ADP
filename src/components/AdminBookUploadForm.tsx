@@ -2,6 +2,7 @@
 
 import { upload } from "@vercel/blob/client";
 import { type FormEvent, useState } from "react";
+import type { BlobAccess } from "@/lib/blobConfig";
 
 const MAX_BOOK_UPLOAD_BYTES = 40 * 1024 * 1024;
 
@@ -25,8 +26,10 @@ function isFilledPdf(value: FormDataEntryValue | null): value is File {
 }
 
 export default function AdminBookUploadForm({
+  blobAccess,
   useDirectBlobUpload,
 }: {
+  blobAccess: BlobAccess;
   useDirectBlobUpload: boolean;
 }) {
   const [error, setError] = useState("");
@@ -69,7 +72,7 @@ export default function AdminBookUploadForm({
         `book/${Date.now()}-${sanitizeFilename(file.name)}`,
         file,
         {
-          access: "public",
+          access: blobAccess,
           contentType: file.type || "application/pdf",
           handleUploadUrl: "/api/admin/book/blob-upload",
           onUploadProgress: (event) => {
@@ -89,6 +92,7 @@ export default function AdminBookUploadForm({
 
       const response = await fetch("/api/admin/book/upload", {
         body: createFormData,
+        cache: "no-store",
         method: "POST",
       });
 

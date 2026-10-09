@@ -90,6 +90,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         return {
           addRandomSuffix: true,
           allowedContentTypes: uploadRules.allowedContentTypes,
+          cacheControlMaxAge: 60,
           maximumSizeInBytes: uploadRules.maximumSizeInBytes,
           tokenPayload: JSON.stringify({
             kind: uploadRules.kind,

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { BookOpenText } from "lucide-react";
 import BookReader from "@/components/BookReader";
 import { PARTY_NAME } from "@/data/partyContent";

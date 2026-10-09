@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 import { Film, Pause, Play, Repeat, Volume2, VolumeX } from "lucide-react";
 
 type VideoReelPlayerProps = {
@@ -19,6 +20,8 @@ export default function VideoReelPlayer({
   src,
   title,
 }: VideoReelPlayerProps) {
+  const uncachedPoster = getUncachedAssetHref(poster);
+  const uncachedSrc = getUncachedAssetHref(src);
   const videoRef = useRef<HTMLVideoElement>(null);
   const shouldKeepPlayingRef = useRef(true);
   const [duration, setDuration] = useState(0);
@@ -169,11 +172,11 @@ export default function VideoReelPlayer({
           setProgress(video.duration ? (video.currentTime / video.duration) * 100 : 0);
         }}
         playsInline
-        poster={poster}
-        preload="metadata"
-        src={src}
+        poster={uncachedPoster}
+        preload="none"
+        src={uncachedSrc}
       >
-        <a href={src}>Open video reel</a>
+        <a href={uncachedSrc}>Open video reel</a>
       </video>
 
       <button

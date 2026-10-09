@@ -2,6 +2,9 @@ import { getAdminSessionFromRequest } from "@/lib/adminAuth";
 import { listStoredMemberships } from "@/lib/membershipRepository";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 const CSV_HEADERS = [
   "membershipNumber",

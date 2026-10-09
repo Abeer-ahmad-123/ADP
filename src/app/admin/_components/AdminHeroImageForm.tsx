@@ -1,5 +1,6 @@
 import NextImage from "next/image";
 import { Images } from "lucide-react";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export default function AdminHeroImageForm({
   heroFlagCaption,
@@ -24,7 +25,7 @@ export default function AdminHeroImageForm({
             alt="Current homepage hero flag image"
             fill
             sizes="(max-width: 760px) 100vw, 620px"
-            src={heroFlagImageSrc}
+            src={getUncachedAssetHref(heroFlagImageSrc)}
           />
         </div>
 

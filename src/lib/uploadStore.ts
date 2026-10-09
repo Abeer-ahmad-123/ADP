@@ -1,6 +1,7 @@
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { del, put } from "@vercel/blob";
+import { getBlobAccess } from "@/lib/blobConfig";
 
 const MAX_MEDIA_UPLOAD_BYTES = 120 * 1024 * 1024;
 const MAX_BOOK_UPLOAD_BYTES = 40 * 1024 * 1024;
@@ -225,8 +226,9 @@ async function saveBlobUpload(file: File, directory: string) {
   const filename = `${Date.now()}-${sanitizeFilename(file.name)}`;
   const pathname = `${directory}/${filename}`;
   const blob = await put(pathname, file, {
-    access: "public",
+    access: getBlobAccess(),
     addRandomSuffix: false,
+    cacheControlMaxAge: 60,
     contentType: file.type || undefined,
     multipart: file.size > 8 * 1024 * 1024,
   });

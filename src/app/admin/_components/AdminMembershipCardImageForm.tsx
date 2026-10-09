@@ -1,5 +1,6 @@
 import NextImage from "next/image";
 import { BadgeCheck } from "lucide-react";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export default function AdminMembershipCardImageForm({
   membershipCardImageSrc,
@@ -25,7 +26,7 @@ export default function AdminMembershipCardImageForm({
             alt="Current membership card top image"
             fill
             sizes="(max-width: 760px) 100vw, 420px"
-            src={membershipCardImageSrc}
+            src={getUncachedAssetHref(membershipCardImageSrc)}
           />
         </div>
 

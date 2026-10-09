@@ -1,6 +1,7 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import { pathToFileURL } from "url";
+import { fetchUncachedBlob } from "@/lib/uncachedBlobServer";
 
 const PDF_DIRECTION_CONTROLS = /[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
 
@@ -86,7 +87,7 @@ async function readPdfData(href: string) {
     throw new Error("PDF href must point to a PDF file.");
   }
 
-  const response = await fetch(href);
+  const response = await fetchUncachedBlob(href);
 
   if (!response.ok) {
     throw new Error("PDF could not be downloaded for text extraction.");

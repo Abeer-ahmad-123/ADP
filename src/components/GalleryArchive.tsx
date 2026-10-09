@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, Images, X } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
 import type { GalleryPhoto } from "@/types/party";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 type GalleryPhotoGroup = {
   key: string;
@@ -125,7 +126,7 @@ export default function GalleryArchiveView({
                         fill
                         priority={groupIndex < 2}
                         sizes="(max-width: 760px) 62vw, (max-width: 1200px) 28vw, 260px"
-                        src={leadPhoto.imageUrl}
+                        src={getUncachedAssetHref(leadPhoto.imageUrl)}
                       />
                     </button>
                   </div>
@@ -152,7 +153,7 @@ export default function GalleryArchiveView({
                               alt={photo.title}
                               fill
                               sizes="(max-width: 760px) 24vw, (max-width: 1200px) 10vw, 90px"
-                              src={photo.imageUrl}
+                              src={getUncachedAssetHref(photo.imageUrl)}
                             />
                             {hiddenPhotoCount > 0 && isLastVisiblePhoto && (
                               <span className="gallery-photo-more-count">
@@ -178,7 +179,7 @@ export default function GalleryArchiveView({
                       fill
                       priority={groupIndex < 2}
                       sizes="(max-width: 760px) 92vw, (max-width: 1200px) 45vw, 360px"
-                      src={leadPhoto.imageUrl}
+                      src={getUncachedAssetHref(leadPhoto.imageUrl)}
                     />
                   </button>
                 </div>
@@ -250,7 +251,7 @@ export default function GalleryArchiveView({
                   fill
                   priority
                   sizes="(max-width: 760px) 92vw, 82vw"
-                  src={activePhoto.imageUrl}
+                  src={getUncachedAssetHref(activePhoto.imageUrl)}
                 />
               </div>
 
@@ -287,7 +288,7 @@ export default function GalleryArchiveView({
                       alt=""
                       fill
                       sizes="84px"
-                      src={photo.imageUrl}
+                      src={getUncachedAssetHref(photo.imageUrl)}
                     />
                   </div>
                 ))}

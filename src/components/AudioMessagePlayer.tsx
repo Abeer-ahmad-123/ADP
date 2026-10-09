@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 import { Pause, Play } from "lucide-react";
 
 type AudioMessagePlayerProps = {
@@ -19,6 +20,7 @@ export default function AudioMessagePlayer({
   src,
   title,
 }: AudioMessagePlayerProps) {
+  const uncachedSrc = getUncachedAssetHref(src);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -82,10 +84,10 @@ export default function AudioMessagePlayer({
         }}
         onPause={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
-        preload="metadata"
-        src={src}
+        preload="none"
+        src={uncachedSrc}
       >
-        <a href={src}>Open audio message</a>
+        <a href={uncachedSrc}>Open audio message</a>
       </audio>
     </div>
   );

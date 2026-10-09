@@ -64,8 +64,11 @@ export default function FeedbackForm() {
     try {
       const response = await fetch("/api/feedback", {
         body: JSON.stringify(payload),
+        cache: "no-store",
         headers: {
+          "Cache-Control": "no-cache, no-store, max-age=0",
           "Content-Type": "application/json",
+          Pragma: "no-cache",
         },
         method: "POST",
       });

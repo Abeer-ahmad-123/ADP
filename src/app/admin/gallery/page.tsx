@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { ExternalLink, FileText } from "lucide-react";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminGalleryUploadForm from "@/app/admin/_components/AdminGalleryUploadForm";
 import { listContentEntries } from "@/lib/contentRepository";
+import { getBlobAccess } from "@/lib/blobConfig";
 import {
   type AdminSearchParams,
   getAdminLoadError,
@@ -12,6 +13,7 @@ import {
   requireAdminSession,
 } from "@/lib/adminPage";
 import type { ContentEntry } from "@/types/party";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +75,7 @@ export default async function AdminGalleryPage({
       </section>
 
       <AdminGalleryUploadForm
+        blobAccess={getBlobAccess()}
         useDirectBlobUpload={
           process.env.NODE_ENV === "production" &&
           Boolean(process.env.BLOB_READ_WRITE_TOKEN)
@@ -120,7 +123,7 @@ export default async function AdminGalleryPage({
                       alt={photo.title}
                       height={360}
                       sizes="(max-width: 760px) 90vw, 360px"
-                      src={photo.mediaUrl}
+                      src={getUncachedAssetHref(photo.mediaUrl)}
                       width={480}
                     />
                   ) : (

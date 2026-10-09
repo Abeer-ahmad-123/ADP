@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import {
   Edit3,
   ExternalLink,
@@ -17,6 +17,7 @@ import {
   type AdminSearchParams,
 } from "@/lib/adminPage";
 import type { ContentEntry, ContentKind } from "@/types/party";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export const dynamic = "force-dynamic";
 
@@ -231,7 +232,11 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
           <div>
             <dt>Uploaded file</dt>
             <dd>
-              <a href={entry.mediaUrl} rel="noreferrer" target="_blank">
+              <a
+                href={getUncachedAssetHref(entry.mediaUrl)}
+                rel="noreferrer"
+                target="_blank"
+              >
                 Open file
               </a>
             </dd>
@@ -241,7 +246,11 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
           <div>
             <dt>Image</dt>
             <dd>
-              <a href={entry.thumbnailUrl} rel="noreferrer" target="_blank">
+              <a
+                href={getUncachedAssetHref(entry.thumbnailUrl)}
+                rel="noreferrer"
+                target="_blank"
+              >
                 Open image
               </a>
             </dd>
@@ -252,8 +261,12 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
       {entry.mediaUrl && (
         <div className="admin-content-preview">
           {entry.kind === "audio" ? (
-            <audio controls preload="metadata" src={entry.mediaUrl}>
-              <a href={entry.mediaUrl}>Open audio file</a>
+            <audio
+              controls
+              preload="none"
+              src={getUncachedAssetHref(entry.mediaUrl)}
+            >
+              <a href={getUncachedAssetHref(entry.mediaUrl)}>Open audio file</a>
             </audio>
           ) : entry.kind === "gallery_photo" ? (
             <Image
@@ -261,18 +274,18 @@ function ContentEntryCard({ entry }: { entry: ContentEntry }) {
               className="admin-content-image-preview"
               height={620}
               sizes="(max-width: 920px) 90vw, 980px"
-              src={entry.mediaUrl}
+              src={getUncachedAssetHref(entry.mediaUrl)}
               width={980}
             />
           ) : (
             <video
               controls
               playsInline
-              poster={entry.thumbnailUrl || undefined}
-              preload="metadata"
-              src={entry.mediaUrl}
+              poster={getUncachedAssetHref(entry.thumbnailUrl) || undefined}
+              preload="none"
+              src={getUncachedAssetHref(entry.mediaUrl)}
             >
-              <a href={entry.mediaUrl}>Open video file</a>
+              <a href={getUncachedAssetHref(entry.mediaUrl)}>Open video file</a>
             </video>
           )}
         </div>

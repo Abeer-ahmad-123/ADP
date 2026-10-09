@@ -37,6 +37,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         return {
           addRandomSuffix: true,
           allowedContentTypes: ["application/pdf"],
+          cacheControlMaxAge: 60,
           maximumSizeInBytes: MAX_MANIFESTO_UPLOAD_BYTES,
           tokenPayload: JSON.stringify({
             kind: "manifestoPdf",

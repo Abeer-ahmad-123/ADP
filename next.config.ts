@@ -8,12 +8,7 @@ const PDFJS_TRACE_FILES = [
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        hostname: "*.blob.vercel-storage.com",
-        protocol: "https",
-      },
-    ],
+    unoptimized: true,
   },
   outputFileTracingIncludes: {
     "/api/admin/book/*": [
@@ -31,6 +26,35 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@napi-rs/canvas", "pdf-to-png-converter"],
   async headers() {
     return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, no-cache, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+          {
+            key: "Vercel-CDN-Cache-Control",
+            value: "no-store",
+          },
+          {
+            key: "Surrogate-Control",
+            value: "no-store",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
+        ],
+      },
       {
         source: "/admin/:path*",
         headers: [

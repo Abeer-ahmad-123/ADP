@@ -12,6 +12,7 @@ import {
   deletePublicUpload,
   saveManifestoPdfUpload,
 } from "@/lib/uploadStore";
+import { isPrivateVercelBlobUrl } from "@/lib/uncachedAsset";
 
 export const runtime = "nodejs";
 
@@ -36,8 +37,7 @@ function isBlobPdfHref(value: string) {
     const url = new URL(value);
 
     return (
-      url.protocol === "https:" &&
-      url.hostname.endsWith(".blob.vercel-storage.com") &&
+      isPrivateVercelBlobUrl(value) &&
       url.pathname.toLowerCase().endsWith(".pdf")
     );
   } catch {

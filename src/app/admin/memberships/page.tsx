@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { Download, Edit3 } from "lucide-react";
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminDeleteMembershipForm from "@/components/AdminDeleteMembershipForm";

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import GoogleAnalyticsEvents from "@/components/GoogleAnalyticsEvents";
 import JsonLd from "@/components/JsonLd";
+import NoCacheGuard from "@/components/NoCacheGuard";
 import {
   PARTY_LOGO_ALT,
   PARTY_LOGO_SRC,
@@ -15,6 +16,8 @@ import {
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   applicationName: PARTY_NAME,
@@ -78,6 +81,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
+        <NoCacheGuard />
         <JsonLd data={createRootJsonLd()} />
         {children}
       </body>

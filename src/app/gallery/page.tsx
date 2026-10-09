@@ -10,6 +10,7 @@ import {
   createWebPageJsonLd,
   getSeoRoute,
 } from "@/lib/seo";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function GalleryPage() {
             image: photos.map((photo) => ({
               "@type": "ImageObject",
               caption: photo.summary,
-              contentUrl: absoluteUrl(photo.imageUrl),
+              contentUrl: absoluteUrl(getUncachedAssetHref(photo.imageUrl)),
               name: photo.title,
             })),
             name: "Awam Dost Party photo gallery",

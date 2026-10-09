@@ -1,10 +1,12 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { ScrollText } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { ManifestoDocument } from "@/lib/manifestoRepository";
+import type { BlobAccess } from "@/lib/blobConfig";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 const MAX_MANIFESTO_UPLOAD_BYTES = 40 * 1024 * 1024;
 
@@ -28,9 +30,11 @@ function isFilledPdf(value: FormDataEntryValue | null): value is File {
 }
 
 export default function AdminManifestoPanel({
+  blobAccess,
   manifesto,
   useDirectBlobUpload,
 }: {
+  blobAccess: BlobAccess;
   manifesto: ManifestoDocument;
   useDirectBlobUpload: boolean;
 }) {
@@ -81,7 +85,7 @@ export default function AdminManifestoPanel({
           `manifesto/${Date.now()}-${sanitizeFilename(file.name)}`,
           file,
           {
-            access: "public",
+            access: blobAccess,
             contentType: file.type || "application/pdf",
             handleUploadUrl: "/api/admin/manifesto/blob-upload",
             onUploadProgress: (event) => {
@@ -98,6 +102,7 @@ export default function AdminManifestoPanel({
 
       const response = await fetch("/api/admin/manifesto", {
         body: updateFormData,
+        cache: "no-store",
         method: "POST",
       });
 
@@ -140,7 +145,7 @@ export default function AdminManifestoPanel({
           {manifesto.updatedAt && <small>Last updated {manifesto.updatedAt}</small>}
         </div>
         {manifesto.pdfHref && (
-          <Link href={manifesto.pdfHref} target="_blank">
+          <Link href={getUncachedAssetHref(manifesto.pdfHref)} target="_blank">
             Open PDF
           </Link>
         )}

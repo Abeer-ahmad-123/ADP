@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run audit:cache",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "audit:cache": "node scripts/audit-cache.mjs",
+    "audit:cache:database": "node --env-file=.env.local scripts/audit-cache.mjs --database",
+    "blob:migrate-private": "node --env-file=.env.local scripts/migrate-private-blobs.mjs",
     "admin:create": "node scripts/create-admin.mjs",
     "db:schema": "node scripts/apply-schema.mjs"
   },

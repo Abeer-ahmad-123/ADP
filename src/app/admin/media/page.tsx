@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import {
   Edit3,
   ExternalLink,
@@ -9,6 +9,7 @@ import {
 import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminMediaUploadForm from "@/app/admin/_components/AdminMediaUploadForm";
 import { listContentEntries } from "@/lib/contentRepository";
+import { getBlobAccess } from "@/lib/blobConfig";
 import {
   getAdminLoadError,
   getAdminStatusMessage,
@@ -16,6 +17,7 @@ import {
   type AdminSearchParams,
 } from "@/lib/adminPage";
 import type { ContentEntry } from "@/types/party";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export const dynamic = "force-dynamic";
 
@@ -59,22 +61,26 @@ function MediaPreview({ entry }: { entry: ContentEntry }) {
   }
 
   if (entry.kind === "audio") {
+    const mediaHref = getUncachedAssetHref(entry.mediaUrl);
+
     return (
-      <audio controls preload="metadata" src={entry.mediaUrl}>
-        <a href={entry.mediaUrl}>Open audio file</a>
+      <audio controls preload="none" src={mediaHref}>
+        <a href={mediaHref}>Open audio file</a>
       </audio>
     );
   }
+
+  const mediaHref = getUncachedAssetHref(entry.mediaUrl);
 
   return (
     <video
       controls
       playsInline
-      poster={entry.thumbnailUrl || undefined}
-      preload="metadata"
-      src={entry.mediaUrl}
+      poster={getUncachedAssetHref(entry.thumbnailUrl) || undefined}
+      preload="none"
+      src={mediaHref}
     >
-      <a href={entry.mediaUrl}>Open video file</a>
+      <a href={mediaHref}>Open video file</a>
     </video>
   );
 }
@@ -140,7 +146,7 @@ function AdminMediaSection({
                 {entry.mediaUrl && (
                   <a
                     className="admin-file-link"
-                    href={entry.mediaUrl}
+                    href={getUncachedAssetHref(entry.mediaUrl)}
                     rel="noreferrer"
                     target="_blank"
                   >
@@ -187,6 +193,7 @@ export default async function AdminMediaPage({
       title="Media"
     >
       <AdminMediaUploadForm
+        blobAccess={getBlobAccess()}
         useDirectBlobUpload={
           process.env.NODE_ENV === "production" &&
           Boolean(process.env.BLOB_READ_WRITE_TOKEN)

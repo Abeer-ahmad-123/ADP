@@ -3,6 +3,7 @@ import {
   PARTY_NAME,
   PARTY_SHORT_NAME,
 } from "@/data/partyContent";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 import type { MemberFormValues, MemberRecord } from "@/types/party";
 
 const FALLBACK_CITY_CODE = "PK";
@@ -142,7 +143,16 @@ function getAbsoluteImageHref(src: string) {
 }
 
 async function getImageDataUri(src: string, loadErrorMessage: string) {
-  const response = await fetch(getAbsoluteImageHref(src));
+  const response = await fetch(
+    getUncachedAssetHref(getAbsoluteImageHref(src)),
+    {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache, no-store, max-age=0",
+        Pragma: "no-cache",
+      },
+    },
+  );
 
   if (!response.ok) {
     throw new Error(loadErrorMessage);

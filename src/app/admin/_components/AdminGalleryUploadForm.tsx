@@ -3,6 +3,7 @@
 import { upload } from "@vercel/blob/client";
 import { Images } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import type { BlobAccess } from "@/lib/blobConfig";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
 
@@ -26,8 +27,10 @@ function isFilledImage(value: FormDataEntryValue | null): value is File {
 }
 
 export default function AdminGalleryUploadForm({
+  blobAccess,
   useDirectBlobUpload,
 }: {
+  blobAccess: BlobAccess;
   useDirectBlobUpload: boolean;
 }) {
   const [error, setError] = useState("");
@@ -75,7 +78,7 @@ export default function AdminGalleryUploadForm({
           `content/gallery/${batchStamp}-${index + 1}-${sanitizeFilename(file.name)}`,
           file,
           {
-            access: "public",
+            access: blobAccess,
             contentType: file.type || "image/jpeg",
             handleUploadUrl: "/api/admin/content/blob-upload",
             onUploadProgress: (event) => {
@@ -103,6 +106,7 @@ export default function AdminGalleryUploadForm({
       setStatusLabel("Saving");
       const response = await fetch("/api/admin/content/upload", {
         body: createFormData,
+        cache: "no-store",
         method: "POST",
       });
 

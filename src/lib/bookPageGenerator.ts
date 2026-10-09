@@ -2,6 +2,8 @@ import { mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
 import { del, list, put } from "@vercel/blob";
+import { getBlobAccess } from "@/lib/blobConfig";
+import { fetchUncachedBlob } from "@/lib/uncachedBlobServer";
 import {
   pdfToPng,
   VerbosityLevel,
@@ -59,7 +61,7 @@ async function preparePdfForRendering(href: string) {
     throw new Error("Uploaded PDF href must point to a PDF file.");
   }
 
-  const response = await fetch(href);
+  const response = await fetchUncachedBlob(href);
 
   if (!response.ok) {
     throw new Error("Uploaded PDF could not be downloaded for page rendering.");
@@ -174,9 +176,9 @@ async function uploadGeneratedBookPageImage({
 }) {
   const pathname = getBookPageBlobPathname(bookId, paddedPageNumber);
   const blob = await put(pathname, imageBuffer, {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
+    access: getBlobAccess(),
+    addRandomSuffix: true,
+    cacheControlMaxAge: 60,
     contentType: "image/png",
   });
 

@@ -3,6 +3,7 @@ import AdminChrome from "@/app/admin/_components/AdminChrome";
 import AdminManifestoPanel from "@/app/admin/_components/AdminManifestoPanel";
 import { AGENDA_ITEMS, MANIFESTO_POINTS } from "@/data/partyContent";
 import { getManifestoDocument } from "@/lib/manifestoRepository";
+import { getBlobAccess } from "@/lib/blobConfig";
 import {
   type AdminSearchParams,
   getAdminLoadError,
@@ -73,6 +74,7 @@ export default async function AdminManifestoPage({
       </section>
 
       <AdminManifestoPanel
+        blobAccess={getBlobAccess()}
         manifesto={data.manifesto}
         useDirectBlobUpload={
           process.env.NODE_ENV === "production" &&

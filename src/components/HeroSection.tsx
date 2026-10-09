@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/NoCacheLink";
 import { ArrowDown, BadgeCheck, BookOpenText, UserRoundPlus } from "lucide-react";
 import {
   PARTY_LOGO_ALT,
@@ -7,6 +7,7 @@ import {
   PARTY_NAME,
   PARTY_TAGLINE,
 } from "@/data/partyContent";
+import { getUncachedAssetHref } from "@/lib/uncachedAsset";
 
 export default function HeroSection({
   heroFlagCaption,
@@ -72,7 +73,7 @@ export default function HeroSection({
               fill
               priority
               sizes="(max-width: 920px) 250px, (max-width: 1500px) 30vw, 440px"
-              src={resolvedHeroFlagImageSrc}
+              src={getUncachedAssetHref(resolvedHeroFlagImageSrc)}
             />
           </div>
           {resolvedHeroFlagCaption && (
