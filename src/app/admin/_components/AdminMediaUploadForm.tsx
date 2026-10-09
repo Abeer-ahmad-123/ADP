@@ -6,7 +6,7 @@ import { type FormEvent, useState } from "react";
 
 type MediaKind = "audio" | "video_reel";
 
-const MAX_MEDIA_UPLOAD_BYTES = 120 * 1024 * 1024;
+const MAX_MEDIA_UPLOAD_BYTES = 1024 * 1024 * 1024;
 
 function sanitizeFilename(value: string) {
   const fallback = "media-upload";
@@ -72,7 +72,7 @@ export default function AdminMediaUploadForm({
     }
 
     if (file.size > MAX_MEDIA_UPLOAD_BYTES) {
-      setError("Media uploads must be 120 MB or smaller.");
+      setError("Media uploads must be 1 GB or smaller.");
       return;
     }
 
@@ -89,6 +89,7 @@ export default function AdminMediaUploadForm({
           access: "public",
           contentType: file.type || getFallbackContentType(kind),
           handleUploadUrl: "/api/admin/content/blob-upload",
+          multipart: true,
           onUploadProgress: (event) => {
             setStatusLabel("Uploading media");
             setProgress(event.percentage);
