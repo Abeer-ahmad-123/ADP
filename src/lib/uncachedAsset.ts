@@ -1,5 +1,5 @@
 const VERCEL_BLOB_HOST_SUFFIX = ".blob.vercel-storage.com";
-const UNCACHED_BLOB_ROUTE = "/api/uncached-blob";
+const MEDIA_ROUTE = "/api/media";
 
 export function isVercelBlobUrl(value: string) {
   try {
@@ -29,5 +29,5 @@ export function getUncachedAssetHref(href: string | undefined) {
     return href || "";
   }
 
-  return `${UNCACHED_BLOB_ROUTE}?url=${encodeURIComponent(href)}`;
+  return `${MEDIA_ROUTE}?url=${encodeURIComponent(href)}`;
 }

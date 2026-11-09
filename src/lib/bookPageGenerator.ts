@@ -3,7 +3,7 @@ import { tmpdir } from "os";
 import path from "path";
 import { del, list, put } from "@vercel/blob";
 import { getBlobAccess } from "@/lib/blobConfig";
-import { fetchUncachedBlob } from "@/lib/uncachedBlobServer";
+import { fetchMedia } from "@/lib/mediaServer";
 import {
   pdfToPng,
   VerbosityLevel,
@@ -61,7 +61,7 @@ async function preparePdfForRendering(href: string) {
     throw new Error("Uploaded PDF href must point to a PDF file.");
   }
 
-  const response = await fetchUncachedBlob(href);
+  const response = await fetchMedia(href);
 
   if (!response.ok) {
     throw new Error("Uploaded PDF could not be downloaded for page rendering.");

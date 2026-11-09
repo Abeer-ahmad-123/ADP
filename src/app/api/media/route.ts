@@ -1,5 +1,6 @@
 import { NO_STORE_RESPONSE_HEADERS } from "@/lib/cacheControl";
 import { isVercelBlobUrl } from "@/lib/uncachedAsset";
+import { fetchMedia } from "@/lib/mediaServer";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -58,18 +59,12 @@ async function readBlob(request: Request, method: "GET" | "HEAD") {
     return createErrorResponse("Vercel Blob access is not configured.", 503);
   }
 
-  upstreamHeaders.set("Authorization", `Bearer ${token}`);
-  // Vercel guarantees that cache=0 bypasses its CDN for private stores.
-  upstreamUrl.searchParams.set("cache", "0");
-
   let upstream: Response;
 
   try {
-    upstream = await fetch(upstreamUrl, {
-      cache: "no-store",
+    upstream = await fetchMedia(source, {
       headers: upstreamHeaders,
       method,
-      redirect: "error",
     });
   } catch {
     return createErrorResponse("The Blob could not be fetched.", 502);

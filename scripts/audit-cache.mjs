@@ -103,9 +103,9 @@ requireText("src/app/layout.tsx", "dynamic = \"force-dynamic\"", "is not forced 
 requireText("src/app/layout.tsx", "fetchCache = \"force-no-store\"", "does not force no-store fetching");
 requireText("src/app/layout.tsx", "revalidate = 0", "does not disable revalidation caching");
 requireText("src/app/layout.tsx", "<NoCacheGuard />", "does not guard against browser history cache restores");
-requireText("src/app/api/uncached-blob/route.ts", "searchParams.set(\"cache\", \"0\")", "does not bypass the private Blob CDN");
-requireText("src/app/api/uncached-blob/route.ts", "Public Vercel Blob URLs are disabled", "does not reject public Blob URLs");
-requireText("src/lib/uncachedBlobServer.ts", "searchParams.set(\"cache\", \"0\")", "does not bypass the private Blob CDN");
+requireText("src/app/api/media/route.ts", "fetchMedia(source", "does not use the shared media reader");
+requireText("src/app/api/media/route.ts", "Public Vercel Blob URLs are disabled", "does not reject public Blob URLs");
+requireText("src/lib/mediaServer.ts", "searchParams.set(\"cache\", \"0\")", "does not bypass the private Blob CDN");
 requireText("src/lib/blobConfig.ts", "configuredAccess !== \"private\"", "does not fail closed to private Blob storage");
 requireText("src/components/NoCacheLink.tsx", "prefetch={false}", "does not disable Link prefetching");
 
@@ -193,6 +193,6 @@ if (failures.length > 0) {
     }).`,
   );
   console.log(
-    "All application reads bypass Next.js, browser, CDN, and private Vercel Blob caches.",
+    "Application responses disable caching; genuine private Blob stores additionally bypass the Blob CDN. Legacy public-store fallbacks cannot guarantee origin reads.",
   );
 }
